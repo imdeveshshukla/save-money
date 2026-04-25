@@ -3,6 +3,7 @@
     "name": "BudgetApp",
     "slug": "BudgetApp",
     "version": "1.0.0",
+    "scheme": "budgetapp",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -20,13 +21,24 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.BudgetApp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-share-intent",
+        {
+          "android": {
+            "intentFilters": [
+              "image/*"
+            ]
+          }
+        }
+      ]
     ]
   }
 }

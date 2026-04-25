@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { useShareIntent } from 'expo-share-intent';
 
 import { BudgetProvider } from './src/context/BudgetContext';
 import { colors } from './src/theme/colors';
@@ -60,11 +61,37 @@ function TabNavigator() {
 }
 
 export default function App() {
+  const navigationRef = useRef(null);
+  const [isNavigationReady, setIsNavigationReady] = useState(false);
+  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntent();
+
+  // When app is opened via Android share sheet, navigate to Upload tab
+  useEffect(() => {
+    // Determine the path to the shared file (depends on single/multiple share format)
+    const sharedImageUri = shareIntent?.value || shareIntent?.files?.[0]?.path || shareIntent?.files?.[0]?.uri;
+
+    if (
+      isNavigationReady &&
+      hasShareIntent &&
+      sharedImageUri &&
+      navigationRef.current
+    ) {
+      navigationRef.current.navigate('Main', {
+        screen: 'Upload',
+        params: { sharedImageUri: sharedImageUri },
+      });
+      resetShareIntent();
+    }
+  }, [isNavigationReady, hasShareIntent, shareIntent]);
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <BudgetProvider>
-          <NavigationContainer>
+          <NavigationContainer 
+            ref={navigationRef} 
+            onReady={() => setIsNavigationReady(true)}
+          >
             <Stack.Navigator
           screenOptions={{
             headerShown: false,

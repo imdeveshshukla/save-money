@@ -1,6 +1,6 @@
 # 💰 BudgetApp — React Native Budget Manager
 
-A beautiful, dark-themed Android budget management app built with **Expo** and **React Native**.
+A beautiful, dark-themed Android budget management app built with **Expo** and **React Native**. Automatically extracts payment details from screenshots using **Groq AI**.
 
 ---
 
@@ -12,7 +12,8 @@ A beautiful, dark-themed Android budget management app built with **Expo** and *
 | 💰 Income Tracking | Log income entries with title, amount, date, and notes |
 | 💸 Expense Tracking | Log expenses with the same details |
 | 🎯 Monthly Budget | Set a monthly spending limit; tracked via a color-coded progress bar |
-| 📷 Screenshot Upload | Capture or upload payment screenshots (OCR analysis coming soon) |
+| 📷 Screenshot Upload | Capture or upload payment screenshots — Groq AI auto-extracts amount, payee & date |
+| 📤 Share from GPay | Share a payment screenshot directly from GPay/PhonePe — app appears in Android share sheet |
 | 💾 Local Persistence | All data saved with AsyncStorage — survives app restarts |
 
 ---
@@ -23,6 +24,9 @@ A beautiful, dark-themed Android budget management app built with **Expo** and *
 - **React Navigation** — Bottom Tabs + Stack
 - **AsyncStorage** — local data persistence
 - **expo-image-picker** — camera & gallery access
+- **expo-file-system** — read shared image files as base64
+- **expo-share-intent** — Android share sheet integration
+- **Groq AI** (`meta-llama/llama-4-scout-17b-16e-instruct`) — vision-based OCR for payment screenshots
 - **@expo/vector-icons** (Ionicons)
 - **React Context + useReducer** — global state
 
@@ -35,14 +39,14 @@ A beautiful, dark-themed Android budget management app built with **Expo** and *
 | Tool | Install |
 |---|---|
 | Node.js ≥ 18 | https://nodejs.org |
-| npm or yarn | included with Node |
-| Expo Go app | [Android](https://play.google.com/store/apps/details?id=host.exp.exponent) / [iOS](https://apps.apple.com/app/expo-go/id982107779) |
+| Android Studio + SDK | Required for dev build (share intent feature) |
+| A physical Android device or AVD | For testing |
 
-> **No Android Studio or Xcode required** for development with Expo Go!
+> ⚠️ **Expo Go is NOT supported** — the share intent feature modifies native Android code and requires a Development Build.
 
 ---
 
-### 1. Clone / Open the project
+### 1. Clone / open the project
 
 ```bash
 cd BudgetApp
@@ -51,30 +55,30 @@ cd BudgetApp
 ### 2. Install dependencies
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
-### 3. Start the development server
+### 3. Add your Groq API key
+
+Get a free key at https://console.groq.com/keys, then create/update `.env`:
+
+```env
+EXPO_PUBLIC_GROQ_API_KEY=gsk_your_key_here
+```
+
+### 4. Build and run on Android
 
 ```bash
-npx expo start
+npx expo run:android
 ```
 
-This will open the **Expo Dev Tools** in your browser and show a QR code in your terminal.
+> First build takes a few minutes. Connect your Android device via USB with **USB debugging enabled**, or start an Android emulator first.
 
-### 4. Run on your device
+For subsequent runs (after the native build exists):
 
-**Option A — Physical Android device (recommended):**
-1. Install **Expo Go** from the Play Store
-2. Open Expo Go → Scan the QR code from the terminal
-
-**Option B — Android Emulator:**
-1. Open Android Studio → start an AVD (Android Virtual Device)
-2. In the Expo terminal, press `a` to launch on the emulator
-
-**Option C — Web preview (limited):**
-1. Press `w` in the Expo terminal
-2. Opens in your browser (some native features won't work)
+```bash
+npx expo start --dev-client
+```
 
 ---
 
@@ -82,16 +86,18 @@ This will open the **Expo Dev Tools** in your browser and show a QR code in your
 
 ```
 BudgetApp/
-├── App.js                          # Root: navigation + context provider
+├── App.js                          # Root: navigation + share intent handler
+├── .env                            # EXPO_PUBLIC_GROQ_API_KEY (not committed)
+├── app.json                        # Expo config + expo-share-intent plugin
 ├── src/
 │   ├── context/
 │   │   └── BudgetContext.js        # Global state (budget, transactions)
 │   ├── screens/
-│   │   ├── DashboardScreen.js      # Home - summary & recent transactions
+│   │   ├── DashboardScreen.js      # Home – summary & recent transactions
 │   │   ├── TransactionsScreen.js   # Full transaction list with filters
-│   │   ├── AddTransactionScreen.js # Add income or expense
+│   │   ├── AddTransactionScreen.js # Add income or expense manually
 │   │   ├── BudgetScreen.js         # Set monthly budget
-│   │   └── UploadScreen.js         # Screenshot upload (OCR placeholder)
+│   │   └── UploadScreen.js         # Screenshot upload + Groq AI extraction
 │   ├── components/
 │   │   ├── SummaryCard.js          # Budget / income / expense mini card
 │   │   ├── TransactionCard.js      # Single transaction row
@@ -127,40 +133,49 @@ BudgetApp/
 - Set your monthly budget amount
 - Shows current budget (saved persistently)
 
-### Upload
+### Upload (AI-powered)
 - Take a photo or pick from gallery
-- Preview the screenshot
-- Add it as an expense entry
-- 🔮 OCR auto-fill coming in a future release
+- Or **share directly from GPay / PhonePe** via Android share sheet
+- Groq AI automatically extracts: amount, payee, merchant name, date
+- One tap to save as an expense
 
 ---
 
-## 🔮 Roadmap
+## 📤 Using the Share Feature
 
-- [ ] **OCR Integration** — auto-extract amount & merchant from payment screenshots using Google Vision API or Gemini
-- [ ] **Date Picker** — native date picker for transactions
-- [ ] **Monthly History** — view past months' data
-- [ ] **Categories** — tag transactions (Food, Travel, Utilities, etc.)
-- [ ] **Export to CSV** — share your transaction history
-- [ ] **Charts** — pie/bar charts for expense breakdown
-- [ ] **Notifications** — budget limit alerts
+1. Open **GPay** (or any UPI/banking app) and complete a payment
+2. Tap **Share** on the payment receipt/screenshot
+3. Select **BudgetApp** from the Android share sheet
+4. The app opens on the Upload screen with the screenshot pre-loaded
+5. Tap **"Add as Expense"** — Groq AI extracts all details automatically
 
 ---
 
 ## 🐛 Troubleshooting
 
-**"Unable to find module" errors**
+**Build fails with dependency errors**
 ```bash
-npm install
-npx expo start --clear
+npm install --legacy-peer-deps
+npx expo run:android
 ```
 
-**Expo Go can't connect**
-- Ensure phone and PC are on the same Wi-Fi network
-- Try using tunnel mode: `npx expo start --tunnel`
+**`EXPO_PUBLIC_GROQ_API_KEY` not found / missing API key alert**
+- Make sure `.env` exists with your key and restart the dev server
+
+**Groq API returns an error**
+- Check your key is valid at https://console.groq.com/keys
+- Ensure image is under ~4MB (Groq's base64 limit)
+
+**BudgetApp not showing in share sheet**
+- Only works after `npx expo run:android` (not Expo Go)
+- Uninstall and reinstall the app after first build if share target doesn't appear
 
 **Image picker not working on emulator**
 - Camera won't work on AVD; use Gallery or test on a real device
+
+**Expo dev client can't connect**
+- Ensure phone and PC are on the same Wi-Fi network
+- Try: `npx expo start --dev-client --tunnel`
 
 ---
 

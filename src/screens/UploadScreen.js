@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useBudget } from '../context/BudgetContext';
 import { colors } from '../theme/colors';
 
@@ -23,12 +24,54 @@ function todayString() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-export default function UploadScreen({ navigation }) {
+export default function UploadScreen({ navigation, route }) {
   const { addTransaction } = useBudget();
   const [imageUri, setImageUri] = useState(null);
   const [imageName, setImageName] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isSharedImage, setIsSharedImage] = useState(false);
+
+  // Handle image shared from another app (e.g. GPay share sheet)
+  useEffect(() => {
+    const sharedUri = route?.params?.sharedImageUri;
+    if (!sharedUri) return;
+
+    async function loadSharedImage() {
+      try {
+        setLoading(true);
+        let safeUri = sharedUri;
+        // If Android returns a raw absolute path, FileSystem needs the file:// prefix
+        if (safeUri.startsWith('/')) {
+          safeUri = 'file://' + safeUri;
+        }
+
+        const base64 = await FileSystem.readAsStringAsync(safeUri, {
+          encoding: 'base64',
+        });
+        setImageUri(safeUri);
+        setImageName('shared_screenshot.jpg');
+        setImageBase64(base64);
+        setIsSharedImage(true);
+        
+        // Automatically extract & add expense since user shared it to this app!
+        await handleAddAsExpense(safeUri, base64);
+      } catch (e) {
+        Alert.alert('Error', `Could not load the shared image.\nReason: ${e.message}`);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadSharedImage();
+  }, [route?.params?.sharedImageUri]);
+
+  function clearImage() {
+    setImageUri(null);
+    setImageName(null);
+    setImageBase64(null);
+    setIsSharedImage(false);
+  }
 
   async function pickImage(fromCamera) {
     let result;
@@ -40,7 +83,7 @@ export default function UploadScreen({ navigation }) {
         return;
       }
       result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         quality: 0.8,
         base64: true,
       });
@@ -51,7 +94,7 @@ export default function UploadScreen({ navigation }) {
         return;
       }
       result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         quality: 0.8,
         base64: true,
       });
@@ -65,8 +108,14 @@ export default function UploadScreen({ navigation }) {
     }
   }
 
-  async function handleAddAsExpense() {
-    if (!imageUri || !imageBase64) {
+  async function handleAddAsExpense(customUri, customBase64) {
+    // Buttons pass a GestureResponderEvent on click. Clean it if so:
+    const isSyntheticEvent = customUri && typeof customUri === 'object' && customUri.nativeEvent;
+    
+    const targetUri = (!isSyntheticEvent && customUri) ? customUri : imageUri;
+    const targetBase64 = customBase64 ? customBase64 : imageBase64;
+
+    if (!targetUri || !targetBase64) {
       Alert.alert('No image', 'Please select a screenshot first.');
       return;
     }
@@ -103,7 +152,7 @@ export default function UploadScreen({ navigation }) {
                 {
                   type: 'image_url',
                   image_url: {
-                    url: `data:image/jpeg;base64,${imageBase64}`,
+                    url: `data:image/jpeg;base64,${targetBase64}`,
                   },
                 },
               ],
@@ -144,7 +193,7 @@ export default function UploadScreen({ navigation }) {
         amount: parsed.amount || 0,
         date: parsed.date || todayString(),
         note: parsed.note || 'Extracted via Groq AI',
-        imageUri,
+        imageUri: targetUri,
       });
 
       Alert.alert(
@@ -193,6 +242,17 @@ export default function UploadScreen({ navigation }) {
             <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="contain" />
             {imageName && <Text style={styles.imageName}>{imageName}</Text>}
 
+            {/* Shared image banner */}
+            {isSharedImage && (
+              <View style={styles.sharedBanner}>
+                <Text style={styles.sharedBannerIcon}>📤</Text>
+                <View style={styles.ocrText}>
+                  <Text style={styles.sharedBannerTitle}>Received via Share Sheet</Text>
+                  <Text style={styles.ocrSub}>Tap "Add as Expense" to extract &amp; save.</Text>
+                </View>
+              </View>
+            )}
+
             {/* OCR Banner */}
             <View style={styles.ocrBanner}>
               <Text style={styles.ocrIcon}>✨</Text>
@@ -212,7 +272,7 @@ export default function UploadScreen({ navigation }) {
               )}
             </Pressable>
 
-            <Pressable style={styles.clearBtn} onPress={() => { setImageUri(null); setImageName(null); setImageBase64(null); }} disabled={loading}>
+            <Pressable style={styles.clearBtn} onPress={clearImage} disabled={loading}>
               <Text style={[styles.clearBtnText, loading && { opacity: 0.5 }]}>Remove Image</Text>
             </Pressable>
           </View>
@@ -231,9 +291,8 @@ export default function UploadScreen({ navigation }) {
           <Text style={styles.infoTitle}>💡 How to use</Text>
           <Text style={styles.infoText}>
             1. Take or select a UPI / bank payment screenshot{'\n'}
-            2. Tap "Add as Expense" to log it{'\n'}
-            3. Find the entry in Transactions and update the amount manually{'\n\n'}
-            🔮 OCR auto-extraction will be added in a future release.
+            2. Or share a screenshot directly from GPay / PhonePe{'\n'}
+            3. Tap "Add as Expense" — Groq AI extracts all details automatically
           </Text>
         </View>
         <View style={{ height: 60 }} />
@@ -311,10 +370,31 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary + '22',
     padding: 12,
     margin: 12,
+    marginBottom: 0,
     borderRadius: 10,
     gap: 10,
     borderWidth: 1,
     borderColor: colors.primary + '44',
+  },
+  sharedBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#0aaa8022',
+    padding: 12,
+    margin: 12,
+    marginBottom: 0,
+    borderRadius: 10,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#0aaa8044',
+  },
+  sharedBannerIcon: {
+    fontSize: 22,
+  },
+  sharedBannerTitle: {
+    color: '#0aaa80',
+    fontSize: 13,
+    fontWeight: '700',
   },
   ocrIcon: {
     fontSize: 22,
