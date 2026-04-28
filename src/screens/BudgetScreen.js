@@ -14,8 +14,10 @@ import { useBudget } from '../context/BudgetContext';
 import { colors } from '../theme/colors';
 
 export default function BudgetScreen() {
-  const { budget, setBudget } = useBudget();
+  const { budget, setBudget, activeCategory } = useBudget();
   const [input, setInput] = useState('');
+
+  const categoryName = activeCategory?.name ?? 'Category';
 
   function handleSave() {
     const num = parseFloat(input);
@@ -36,8 +38,8 @@ export default function BudgetScreen() {
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
       <View style={styles.container}>
 
-        <Text style={styles.heading}>Monthly Budget</Text>
-        <Text style={styles.sub}>Set how much you plan to spend this month</Text>
+        <Text style={styles.heading}>Budget</Text>
+        <Text style={styles.sub}>{categoryName}</Text>
 
         {/* Current Budget Display */}
         <View style={styles.currentCard}>

@@ -14,8 +14,10 @@ import { colors } from '../theme/colors';
 const FILTERS = ['All', 'Income', 'Expense'];
 
 export default function TransactionsScreen() {
-  const { transactions, deleteTransaction } = useBudget();
+  const { transactions, deleteTransaction, activeCategory } = useBudget();
   const [filter, setFilter] = useState('All');
+
+  const categoryName = activeCategory?.name ?? '';
 
   const filtered = transactions.filter((t) => {
     if (filter === 'All') return true;
@@ -27,7 +29,12 @@ export default function TransactionsScreen() {
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
       <View style={styles.header}>
-        <Text style={styles.title}>Transactions</Text>
+        <View>
+          <Text style={styles.title}>Transactions</Text>
+          {categoryName ? (
+            <Text style={styles.categoryLabel}>{categoryName}</Text>
+          ) : null}
+        </View>
         <Text style={styles.count}>{filtered.length} entries</Text>
       </View>
 
@@ -77,10 +84,16 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 12,
+  },
+  categoryLabel: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '600',
+    marginTop: 2,
   },
   title: {
     fontSize: 24,

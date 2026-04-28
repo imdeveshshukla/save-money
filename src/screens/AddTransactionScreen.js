@@ -24,7 +24,9 @@ function todayString() {
 }
 
 export default function AddTransactionScreen({ navigation }) {
-  const { addTransaction } = useBudget();
+  const { addTransaction, activeCategory } = useBudget();
+
+  const categoryName = activeCategory?.name ?? 'Default';
 
   const [type, setType] = useState('expense');
   const [title, setTitle] = useState('');
@@ -65,6 +67,7 @@ export default function AddTransactionScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
 
         <Text style={styles.heading}>New Transaction</Text>
+        <Text style={styles.categoryLabel}>📂 {categoryName}</Text>
 
         {/* Type Toggle */}
         <View style={styles.typeToggle}>
@@ -154,6 +157,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
     marginBottom: 24,
+  },
+  categoryLabel: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: -18,
+    marginBottom: 8,
   },
   typeToggle: {
     flexDirection: 'row',

@@ -25,7 +25,7 @@ function todayString() {
 }
 
 export default function UploadScreen({ navigation, route }) {
-  const { addTransaction } = useBudget();
+  const { addTransaction, activeCategory } = useBudget();
   const [imageUri, setImageUri] = useState(null);
   const [imageName, setImageName] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
@@ -223,6 +223,14 @@ export default function UploadScreen({ navigation, route }) {
 
         <Text style={styles.heading}>Upload Payment</Text>
         <Text style={styles.sub}>Capture or select a payment screenshot</Text>
+
+        {/* Active Category badge */}
+        <View style={styles.categoryBadge}>
+          <Text style={styles.categoryBadgeLabel}>📂 Saving to:</Text>
+          <Text style={styles.categoryBadgeName}>
+            {activeCategory?.name ?? 'No category selected'}
+          </Text>
+        </View>
 
         {/* Pick buttons */}
         <View style={styles.pickRow}>
@@ -456,6 +464,28 @@ const styles = StyleSheet.create({
   placeholderSub: {
     color: colors.textMuted,
     fontSize: 13,
+  },
+  categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary + '18',
+    borderWidth: 1,
+    borderColor: colors.primary + '44',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  categoryBadgeLabel: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  categoryBadgeName: {
+    color: colors.primaryLight,
+    fontSize: 13,
+    fontWeight: '700',
+    flex: 1,
   },
   infoCard: {
     backgroundColor: colors.surface,

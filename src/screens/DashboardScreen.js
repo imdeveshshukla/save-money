@@ -12,6 +12,7 @@ import SummaryCard from '../components/SummaryCard';
 import BudgetProgressBar from '../components/BudgetProgressBar';
 import TransactionCard from '../components/TransactionCard';
 import { colors } from '../theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function DashboardScreen({ navigation }) {
   const {
@@ -22,12 +23,11 @@ export default function DashboardScreen({ navigation }) {
     transactions,
     deleteTransaction,
     loading,
+    activeCategory,
   } = useBudget();
 
   const recentTransactions = transactions.slice(0, 5);
-
-  const now = new Date();
-  const monthName = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const categoryName = activeCategory?.name ?? 'No Category';
 
   if (loading) {
     return (
@@ -43,9 +43,12 @@ export default function DashboardScreen({ navigation }) {
 
       {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Hello 👋</Text>
-          <Text style={styles.month}>{monthName}</Text>
+        <View style={{ flex: 1, marginRight: 10 }}>
+          <View style={styles.categoryPill}>
+            <Ionicons name="folder-open-outline" size={12} color={colors.primary} />
+            <Text style={styles.categoryPillText}>Active Category</Text>
+          </View>
+          <Text style={styles.month} numberOfLines={1}>{categoryName}</Text>
         </View>
         <Pressable
           style={styles.setBudgetBtn}
@@ -132,9 +135,18 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
   },
-  greeting: {
-    color: colors.textSecondary,
-    fontSize: 13,
+  categoryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  categoryPillText: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
   },
   month: {
     color: colors.text,

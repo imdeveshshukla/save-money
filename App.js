@@ -14,6 +14,7 @@ import TransactionsScreen from './src/screens/TransactionsScreen';
 import BudgetScreen from './src/screens/BudgetScreen';
 import UploadScreen from './src/screens/UploadScreen';
 import AddTransactionScreen from './src/screens/AddTransactionScreen';
+import CategoriesScreen from './src/screens/CategoriesScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -23,6 +24,7 @@ const TAB_ICONS = {
   Transactions: ['list', 'list-outline'],
   Budget: ['wallet', 'wallet-outline'],
   Upload: ['camera', 'camera-outline'],
+  Categories: ['folder', 'folder-outline'],
 };
 
 function TabNavigator() {
@@ -36,13 +38,13 @@ function TabNavigator() {
           borderTopWidth: 1,
           paddingBottom: 9,
           paddingTop: 6,
-          marginBottom:10,
+          marginBottom: 10,
           height: 64,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
           marginTop: 2,
         },
@@ -56,6 +58,7 @@ function TabNavigator() {
       <Tab.Screen name="Transactions" component={TransactionsScreen} />
       <Tab.Screen name="Budget" component={BudgetScreen} />
       <Tab.Screen name="Upload" component={UploadScreen} />
+      <Tab.Screen name="Categories" component={CategoriesScreen} />
     </Tab.Navigator>
   );
 }
@@ -65,55 +68,66 @@ export default function App() {
   const [isNavigationReady, setIsNavigationReady] = useState(false);
   const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntent();
 
-  // When app is opened via Android share sheet, navigate to Upload tab
-  useEffect(() => {
-    // Determine the path to the shared file (depends on single/multiple share format)
-    const sharedImageUri = shareIntent?.value || shareIntent?.files?.[0]?.path || shareIntent?.files?.[0]?.uri;
+  // Capture the shared URI as soon as expo-share-intent provides it.
+  // On cold start the intent is parsed asynchronously AFTER navigation is
+  // already ready, so we must store the URI separately and let a second
+  // effect handle the actual navigation.
+  const [pendingShareUri, setPendingShareUri] = useState(null);
 
-    if (
-      isNavigationReady &&
-      hasShareIntent &&
-      sharedImageUri &&
-      navigationRef.current
-    ) {
+  // Step 1 – capture URI the moment expo-share-intent makes it available
+  useEffect(() => {
+    const sharedImageUri =
+      shareIntent?.value ||
+      shareIntent?.files?.[0]?.path ||
+      shareIntent?.files?.[0]?.uri;
+
+    if (hasShareIntent && sharedImageUri) {
+      setPendingShareUri(sharedImageUri);
+      resetShareIntent(); // clear immediately so it doesn't fire again on re-render
+    }
+  }, [hasShareIntent, shareIntent]);
+
+  // Step 2 – navigate once BOTH the URI and the navigator are ready
+  useEffect(() => {
+    if (isNavigationReady && pendingShareUri && navigationRef.current) {
       navigationRef.current.navigate('Main', {
         screen: 'Upload',
-        params: { sharedImageUri: sharedImageUri },
+        params: { sharedImageUri: pendingShareUri },
       });
-      resetShareIntent();
+      setPendingShareUri(null);
     }
-  }, [isNavigationReady, hasShareIntent, shareIntent]);
+  }, [isNavigationReady, pendingShareUri]);
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <BudgetProvider>
-          <NavigationContainer 
-            ref={navigationRef} 
+          <NavigationContainer
+            ref={navigationRef}
             onReady={() => setIsNavigationReady(true)}
           >
             <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            cardStyle: { backgroundColor: colors.background },
-          }}
-        >
-          <Stack.Screen name="Main" component={TabNavigator} />
-          <Stack.Screen
-            name="AddTransaction"
-            component={AddTransactionScreen}
-            options={{
-              presentation: 'modal',
-              headerShown: true,
-              headerTitle: '',
-              headerStyle: { backgroundColor: colors.background },
-              headerTintColor: colors.primary,
-              headerShadowVisible: false,
-            }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </BudgetProvider>
+              screenOptions={{
+                headerShown: false,
+                cardStyle: { backgroundColor: colors.background },
+              }}
+            >
+              <Stack.Screen name="Main" component={TabNavigator} />
+              <Stack.Screen
+                name="AddTransaction"
+                component={AddTransactionScreen}
+                options={{
+                  presentation: 'modal',
+                  headerShown: true,
+                  headerTitle: '',
+                  headerStyle: { backgroundColor: colors.background },
+                  headerTintColor: colors.primary,
+                  headerShadowVisible: false,
+                }}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </BudgetProvider>
       </SafeAreaView>
     </SafeAreaProvider>
   );
