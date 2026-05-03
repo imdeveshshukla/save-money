@@ -15,6 +15,7 @@ import BudgetScreen from './src/screens/BudgetScreen';
 import UploadScreen from './src/screens/UploadScreen';
 import AddTransactionScreen from './src/screens/AddTransactionScreen';
 import CategoriesScreen from './src/screens/CategoriesScreen';
+import DataScreen from './src/screens/DataScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -25,6 +26,7 @@ const TAB_ICONS = {
   Budget: ['wallet', 'wallet-outline'],
   Upload: ['camera', 'camera-outline'],
   Categories: ['folder', 'folder-outline'],
+  Data: ['server', 'server-outline'],
 };
 
 function TabNavigator() {
@@ -33,19 +35,19 @@ function TabNavigator() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
-          paddingBottom: 9,
-          paddingTop: 6,
-          marginBottom: 10,
+          backgroundColor: '#09090B',
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+          paddingBottom: 10,
+          paddingTop: 8,
           height: 64,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: '600',
+          fontWeight: '700',
           marginTop: 2,
         },
         tabBarIcon: ({ focused, color, size }) => {
@@ -59,6 +61,7 @@ function TabNavigator() {
       <Tab.Screen name="Budget" component={BudgetScreen} />
       <Tab.Screen name="Upload" component={UploadScreen} />
       <Tab.Screen name="Categories" component={CategoriesScreen} />
+      <Tab.Screen name="Data" component={DataScreen} />
     </Tab.Navigator>
   );
 }

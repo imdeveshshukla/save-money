@@ -102,6 +102,10 @@ function reducer(state, action) {
       };
     }
 
+    case 'IMPORT_DATA': {
+      return { ...state, ...action.payload, loading: false };
+    }
+
     default:
       return state;
   }
@@ -199,6 +203,45 @@ export function BudgetProvider({ children }) {
     dispatch({ type: 'DELETE_TRANSACTION', payload: { categoryId: targetId, transactionId } });
   }
 
+  // ── Export / Import ───────────────────────────────────────────────────────────
+  /**
+   * Returns the complete app data as a plain JS object ready to be
+   * JSON-serialised and shared as a .budgetapp file.
+   */
+  function getExportPayload() {
+    return {
+      exportedAt: new Date().toISOString(),
+      version: 2,
+      categories: state.categories,
+      activeCategoryId: state.activeCategoryId,
+    };
+  }
+
+  /**
+   * Validates and applies an imported data payload, replacing all current data.
+   * Returns an error string on failure, or null on success.
+   */
+  function importData(payload) {
+    if (!payload || !Array.isArray(payload.categories)) {
+      return 'Invalid backup file: missing categories.';
+    }
+    // Basic per-category validation
+    for (const cat of payload.categories) {
+      if (typeof cat.id !== 'string' || typeof cat.name !== 'string') {
+        return 'Invalid backup file: category is missing id or name.';
+      }
+      if (!Array.isArray(cat.transactions)) {
+        return 'Invalid backup file: category transactions must be an array.';
+      }
+    }
+    const importedState = {
+      categories: payload.categories,
+      activeCategoryId: payload.activeCategoryId ?? payload.categories[0]?.id ?? null,
+    };
+    dispatch({ type: 'IMPORT_DATA', payload: importedState });
+    return null; // success
+  }
+
   // ── Derived values for the ACTIVE category ───────────────────────────────────
   const transactions = activeCategory?.transactions ?? [];
   const budget = activeCategory?.budget ?? 0;
@@ -241,6 +284,10 @@ export function BudgetProvider({ children }) {
         setBudget,
         addTransaction,
         deleteTransaction,
+
+        // data portability
+        getExportPayload,
+        importData,
       }}
     >
       {children}

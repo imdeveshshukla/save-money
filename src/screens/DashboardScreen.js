@@ -13,6 +13,7 @@ import BudgetProgressBar from '../components/BudgetProgressBar';
 import TransactionCard from '../components/TransactionCard';
 import { colors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function DashboardScreen({ navigation }) {
   const {
@@ -61,15 +62,20 @@ export default function DashboardScreen({ navigation }) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
         {/* Remaining Balance Card */}
-        <View style={styles.balanceCard}>
+        <LinearGradient
+          colors={['#4F46E5', '#7C3AED']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.balanceCard}
+        >
           <Text style={styles.balanceLabel}>Remaining Balance</Text>
-          <Text style={[styles.balanceAmount, { color: remaining >= 0 ? colors.income : colors.expense }]}>
+          <Text style={[styles.balanceAmount, { color: remaining >= 0 ? colors.white : '#FEE2E2' }]}>
             ₹{Number(remaining).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </Text>
           {budget === 0 && (
             <Text style={styles.noBudget}>Set a monthly budget to get started →</Text>
           )}
-        </View>
+        </LinearGradient>
 
         {/* Budget Progress */}
         <BudgetProgressBar spent={totalExpense} budget={budget} />
@@ -167,27 +173,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   balanceCard: {
-    backgroundColor: colors.primary,
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 24,
+    padding: 28,
     alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowRadius: 24,
+    elevation: 12,
+    marginBottom: 8,
   },
   balanceLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
     marginBottom: 8,
-    fontWeight: '600',
+    fontWeight: '500',
     letterSpacing: 0.5,
   },
   balanceAmount: {
-    fontSize: 36,
+    fontSize: 42,
     fontWeight: '800',
     color: colors.white,
+    letterSpacing: -1,
   },
   noBudget: {
     color: 'rgba(255,255,255,0.6)',
@@ -237,21 +244,22 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 28,
     right: 20,
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: colors.primary,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#6366F1',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
+    elevation: 12,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
-    shadowRadius: 12,
+    shadowRadius: 16,
   },
   fabIcon: {
     color: colors.white,
-    fontSize: 28,
-    lineHeight: 32,
+    fontSize: 32,
+    lineHeight: 36,
+    marginLeft: 2,
   },
 });

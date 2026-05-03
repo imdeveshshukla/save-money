@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useBudget } from '../context/BudgetContext';
 import { colors } from '../theme/colors';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function BudgetScreen() {
   const { budget, setBudget, activeCategory } = useBudget();
@@ -42,7 +43,12 @@ export default function BudgetScreen() {
         <Text style={styles.sub}>{categoryName}</Text>
 
         {/* Current Budget Display */}
-        <View style={styles.currentCard}>
+        <LinearGradient
+          colors={['#4F46E5', '#7C3AED']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.currentCard}
+        >
           <Text style={styles.currentLabel}>Current Budget</Text>
           <Text style={styles.currentAmount}>
             {budget > 0
@@ -52,7 +58,7 @@ export default function BudgetScreen() {
           {budget === 0 && (
             <Text style={styles.hint}>Enter a budget below to get started</Text>
           )}
-        </View>
+        </LinearGradient>
 
         {/* Input */}
         <View style={styles.inputSection}>
@@ -100,15 +106,14 @@ const styles = StyleSheet.create({
     marginTop: -12,
   },
   currentCard: {
-    backgroundColor: colors.primary,
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 24,
+    padding: 28,
     alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 8,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    elevation: 12,
   },
   currentLabel: {
     color: 'rgba(255,255,255,0.7)',
@@ -139,15 +144,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     color: colors.text,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
   },
   saveBtn: {
     backgroundColor: colors.primary,
@@ -162,11 +165,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   infoCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 16,
     padding: 16,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
     gap: 8,
   },
   infoTitle: {

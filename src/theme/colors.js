@@ -1,28 +1,28 @@
 export const colors = {
-  background: '#0F172A',
-  surface: '#1E293B',
-  surfaceLight: '#263346',
-  border: '#334155',
+  background: '#09090B',    // Zinc 950
+  surface: '#18181B',       // Zinc 900
+  surfaceLight: '#27272A',  // Zinc 800
+  border: '#27272A',        // Zinc 800
 
-  primary: '#6366F1',       // indigo accent
+  primary: '#6366F1',       // Vibrant Indigo
   primaryLight: '#818CF8',
 
-  income: '#22C55E',        // green
-  incomeLight: '#BBF7D0',
-  expense: '#F43F5E',       // rose
-  expenseLight: '#FFE4E6',
+  income: '#10B981',        // Emerald 500
+  incomeLight: '#D1FAE5',
+  expense: '#EF4444',       // Red 500
+  expenseLight: '#FEE2E2',
 
-  text: '#F1F5F9',
-  textSecondary: '#94A3B8',
-  textMuted: '#64748B',
+  text: '#FAFAFA',          // Zinc 50
+  textSecondary: '#A1A1AA', // Zinc 400
+  textMuted: '#71717A',     // Zinc 500
 
   white: '#FFFFFF',
   black: '#000000',
 
-  card: '#1E293B',
-  cardBorder: '#2D3F55',
+  card: '#18181B',
+  cardBorder: '#27272A',
 
-  success: '#22C55E',
+  success: '#10B981',
   warning: '#F59E0B',
-  danger: '#F43F5E',
+  danger: '#EF4444',
 };

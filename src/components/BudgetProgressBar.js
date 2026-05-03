@@ -42,10 +42,8 @@ export default function BudgetProgressBar({ spent, budget }) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
   },
   labelRow: {
     flexDirection: 'row',
@@ -62,8 +60,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   track: {
-    height: 10,
-    backgroundColor: colors.border,
+    height: 12,
+    backgroundColor: colors.surfaceLight,
     borderRadius: 999,
     overflow: 'hidden',
     marginBottom: 8,

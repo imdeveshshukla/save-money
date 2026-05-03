@@ -355,15 +355,13 @@ const styles = StyleSheet.create({
   // ── Category Card ──────────────────────────────────────────────────────────
   card: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderRadius: 20,
     flexDirection: 'row',
     overflow: 'hidden',
+    marginBottom: 8,
   },
   cardActive: {
-    borderColor: colors.primary + '88',
-    backgroundColor: colors.primary + '12',
+    backgroundColor: colors.surfaceLight,
   },
   activeAccent: {
     width: 4,
@@ -444,14 +442,14 @@ const styles = StyleSheet.create({
   },
   // ── Progress ─────────────────────────────────────────────────────────────
   progressTrack: {
-    height: 4,
+    height: 6,
     backgroundColor: colors.border,
-    borderRadius: 2,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 3,
   },
   // ── Empty ─────────────────────────────────────────────────────────────────
   emptyState: {

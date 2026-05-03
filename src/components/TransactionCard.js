@@ -6,13 +6,11 @@ export default function TransactionCard({ transaction, onDelete }) {
   const isIncome = transaction.type === 'income';
   const accentColor = isIncome ? colors.income : colors.expense;
   const sign = isIncome ? '+' : '-';
+  const bgTint = isIncome ? colors.income + '10' : colors.expense + '10';
 
   return (
     <View style={styles.card}>
-      {/* Left accent bar */}
-      <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
-
-      <View style={styles.iconBox}>
+      <View style={[styles.iconBox, { backgroundColor: bgTint }]}>
         <Text style={styles.icon}>{transaction.imageUri ? '🖼️' : isIncome ? '💰' : '💸'}</Text>
       </View>
 
@@ -41,39 +39,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: 14,
-    marginBottom: 10,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  accentBar: {
-    width: 4,
-    alignSelf: 'stretch',
+    borderRadius: 20,
+    marginBottom: 12,
+    padding: 12,
   },
   iconBox: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 10,
+    marginRight: 14,
   },
   icon: {
-    fontSize: 22,
+    fontSize: 24,
   },
   info: {
     flex: 1,
-    paddingVertical: 12,
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: colors.text,
+    letterSpacing: 0.2,
   },
   date: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 3,
+    fontWeight: '500',
   },
   note: {
     fontSize: 11,
@@ -83,19 +78,20 @@ const styles = StyleSheet.create({
   },
   right: {
     alignItems: 'flex-end',
-    paddingRight: 12,
-    paddingVertical: 12,
-    gap: 6,
+    justifyContent: 'center',
+    paddingLeft: 12,
+    gap: 8,
   },
   amount: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   deleteBtn: {
-    backgroundColor: colors.danger + '22',
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   deleteText: {
     color: colors.danger,

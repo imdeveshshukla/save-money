@@ -335,13 +335,10 @@ const styles = StyleSheet.create({
   },
   pickBtn: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: 16,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 20,
     paddingVertical: 24,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
     gap: 8,
   },
   pickIcon: {
@@ -354,10 +351,8 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
     gap: 0,
   },
   preview: {
@@ -444,13 +439,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   placeholder: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 20,
     paddingVertical: 60,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
     gap: 8,
   },
   placeholderIcon: {
@@ -488,11 +480,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 16,
     padding: 16,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
     gap: 8,
   },
   infoTitle: {

@@ -115,13 +115,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.surfaceLight,
   },
   pillActive: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   pillText: {
     color: colors.textSecondary,

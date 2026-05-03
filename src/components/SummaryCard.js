@@ -28,27 +28,25 @@ export default function SummaryCard({ title, amount, type, icon }) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
     flex: 1,
     marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
     alignItems: 'flex-start',
   },
   iconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   icon: {
-    fontSize: 18,
+    fontSize: 20,
   },
   title: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textSecondary,
     marginBottom: 4,
     fontWeight: '600',
@@ -56,7 +54,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   amount: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.2,
   },
 });
