@@ -1,28 +1,42 @@
+// ── Clean, warm, and classy color palette ───────────────────────────────────
+// Inspired by premium finance apps — soft whites, warm grays, and teal accents
 export const colors = {
-  background: '#09090B',    // Zinc 950
-  surface: '#18181B',       // Zinc 900
-  surfaceLight: '#27272A',  // Zinc 800
-  border: '#27272A',        // Zinc 800
+  // Core backgrounds
+  background: '#F5F5F7',      // Warm off-white
+  surface: '#FFFFFF',          // Pure white cards
+  surfaceLight: '#EEEEF0',    // Subtle gray for inputs/secondary surfaces
+  border: '#E0E0E4',          // Light border
 
-  primary: '#6366F1',       // Vibrant Indigo
-  primaryLight: '#818CF8',
+  // Primary accent — sophisticated teal
+  primary: '#1B9C85',         // Rich teal
+  primaryLight: '#23B89A',    // Lighter teal for hover/active
+  primarySoft: '#E8F7F3',     // Very light teal for tinted backgrounds
 
-  income: '#10B981',        // Emerald 500
-  incomeLight: '#D1FAE5',
-  expense: '#EF4444',       // Red 500
-  expenseLight: '#FEE2E2',
+  // Semantic colors
+  income: '#1B9C85',          // Same as primary (green-teal for income)
+  incomeLight: '#E8F7F3',
+  expense: '#E74C3C',         // Clear, warm red
+  expenseLight: '#FDECEA',
 
-  text: '#FAFAFA',          // Zinc 50
-  textSecondary: '#A1A1AA', // Zinc 400
-  textMuted: '#71717A',     // Zinc 500
+  // Text hierarchy
+  text: '#1A1A2E',            // Deep near-black for headings
+  textSecondary: '#6B7280',   // Medium gray for body text
+  textMuted: '#9CA3AF',       // Light gray for hints/placeholders
 
+  // Neutral
   white: '#FFFFFF',
   black: '#000000',
 
-  card: '#18181B',
-  cardBorder: '#27272A',
+  // Card styles
+  card: '#FFFFFF',
+  cardBorder: '#E0E0E4',
 
-  success: '#10B981',
-  warning: '#F59E0B',
-  danger: '#EF4444',
+  // Status
+  success: '#1B9C85',
+  warning: '#F0A500',
+  danger: '#E74C3C',
+
+  // Tab bar
+  tabBar: '#FFFFFF',
+  tabBarBorder: '#E0E0E4',
 };

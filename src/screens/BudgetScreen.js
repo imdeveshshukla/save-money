@@ -10,9 +10,9 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useBudget } from '../context/BudgetContext';
 import { colors } from '../theme/colors';
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function BudgetScreen() {
   const { budget, setBudget, activeCategory } = useBudget();
@@ -36,51 +36,54 @@ export default function BudgetScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <View style={styles.container}>
 
-        <Text style={styles.heading}>Budget</Text>
-        <Text style={styles.sub}>{categoryName}</Text>
-
         {/* Current Budget Display */}
-        <LinearGradient
-          colors={['#4F46E5', '#7C3AED']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.currentCard}
-        >
+        <View style={styles.currentCard}>
+          <View style={styles.currentIconBox}>
+            <Ionicons name="wallet" size={28} color={colors.primary} />
+          </View>
           <Text style={styles.currentLabel}>Current Budget</Text>
           <Text style={styles.currentAmount}>
             {budget > 0
               ? `₹${Number(budget).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
               : 'Not set'}
           </Text>
+          <Text style={styles.currentCategory}>{categoryName}</Text>
           {budget === 0 && (
             <Text style={styles.hint}>Enter a budget below to get started</Text>
           )}
-        </LinearGradient>
+        </View>
 
         {/* Input */}
         <View style={styles.inputSection}>
-          <Text style={styles.label}>New Budget Amount (₹)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. 30000"
-            placeholderTextColor={colors.textMuted}
-            value={input}
-            onChangeText={setInput}
-            keyboardType="decimal-pad"
-          />
-          <Pressable style={styles.saveBtn} onPress={handleSave}>
-            <Text style={styles.saveBtnText}>💾  Save Budget</Text>
+          <Text style={styles.label}>New Budget Amount</Text>
+          <View style={styles.inputRow}>
+            <Text style={styles.currencyPrefix}>₹</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="30,000"
+              placeholderTextColor={colors.textMuted}
+              value={input}
+              onChangeText={setInput}
+              keyboardType="decimal-pad"
+            />
+          </View>
+          <Pressable
+            style={({ pressed }) => [styles.saveBtn, pressed && { opacity: 0.85 }]}
+            onPress={handleSave}
+          >
+            <Ionicons name="checkmark-circle" size={20} color={colors.white} />
+            <Text style={styles.saveBtnText}>Save Budget</Text>
           </Pressable>
         </View>
 
-        {/* Why Budget section */}
+        {/* Info */}
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>💡 How it works</Text>
+          <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
           <Text style={styles.infoText}>
-            Your budget is used to track spending. Expenses are compared against this limit and shown as a progress bar on the dashboard.
+            Your budget tracks spending. Expenses are compared against this limit and shown as a progress bar on the dashboard.
           </Text>
         </View>
       </View>
@@ -92,71 +95,90 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 28,
+    paddingTop: 16,
     gap: 20,
   },
-  heading: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  sub: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: -12,
-  },
+  // Current Budget Card
   currentCard: {
-    borderRadius: 24,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
     padding: 28,
     alignItems: 'center',
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.4,
-    shadowRadius: 24,
-    elevation: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  currentIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   currentLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
+    color: colors.textMuted,
+    fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.5,
-    marginBottom: 8,
+    textTransform: 'uppercase',
+    marginBottom: 6,
   },
   currentAmount: {
     fontSize: 34,
     fontWeight: '800',
-    color: colors.white,
+    color: colors.text,
+  },
+  currentCategory: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+    marginTop: 6,
   },
   hint: {
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textMuted,
     fontSize: 12,
     marginTop: 8,
-    fontStyle: 'italic',
   },
+  // Input
   inputSection: {
     gap: 10,
   },
   label: {
     color: colors.textSecondary,
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+  },
+  currencyPrefix: {
+    fontSize: 20,
     fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: colors.textMuted,
+    marginRight: 8,
   },
   input: {
-    backgroundColor: colors.surfaceLight,
-    borderRadius: 16,
-    paddingHorizontal: 16,
+    flex: 1,
     paddingVertical: 16,
     color: colors.text,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
   },
   saveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     backgroundColor: colors.primary,
     borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: 'center',
+    paddingVertical: 16,
     marginTop: 4,
   },
   saveBtnText: {
@@ -164,18 +186,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  // Info
   infoCard: {
-    backgroundColor: colors.surfaceLight,
-    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: colors.primarySoft,
+    borderRadius: 14,
     padding: 16,
-    gap: 8,
-  },
-  infoTitle: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
   },
   infoText: {
+    flex: 1,
     color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 20,

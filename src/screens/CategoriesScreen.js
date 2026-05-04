@@ -102,21 +102,19 @@ export default function CategoriesScreen() {
         style={[styles.card, isActive && styles.cardActive]}
         onPress={() => setActiveCategory(item.id)}
       >
-        {/* Left accent */}
-        {isActive && <View style={styles.activeAccent} />}
-
         <View style={styles.cardBody}>
           {/* Top row */}
           <View style={styles.cardTop}>
             <View style={styles.cardTitleRow}>
+              <View style={[styles.statusDot, isActive && styles.statusDotActive]} />
+              <Text style={[styles.cardName, isActive && styles.cardNameActive]} numberOfLines={1}>
+                {item.name}
+              </Text>
               {isActive && (
                 <View style={styles.activeBadge}>
                   <Text style={styles.activeBadgeText}>ACTIVE</Text>
                 </View>
               )}
-              <Text style={[styles.cardName, isActive && styles.cardNameActive]} numberOfLines={1}>
-                {item.name}
-              </Text>
             </View>
             <View style={styles.cardActions}>
               <Pressable
@@ -124,14 +122,14 @@ export default function CategoriesScreen() {
                 onPress={() => openRename(item)}
                 style={styles.iconBtn}
               >
-                <Ionicons name="pencil-outline" size={16} color={colors.textSecondary} />
+                <Ionicons name="pencil-outline" size={15} color={colors.textSecondary} />
               </Pressable>
               <Pressable
                 hitSlop={8}
                 onPress={() => handleDelete(item)}
                 style={styles.iconBtn}
               >
-                <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                <Ionicons name="trash-outline" size={15} color={colors.danger} />
               </Pressable>
             </View>
           </View>
@@ -187,16 +185,16 @@ export default function CategoriesScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Categories</Text>
-          <Text style={styles.headerSub}>{categories.length} categories</Text>
-        </View>
-        <Pressable style={styles.createBtn} onPress={() => setModalVisible(true)}>
-          <Ionicons name="add" size={20} color={colors.white} />
+      {/* Subheader with create button */}
+      <View style={styles.subHeader}>
+        <Text style={styles.headerSub}>{categories.length} categories</Text>
+        <Pressable
+          style={({ pressed }) => [styles.createBtn, pressed && { opacity: 0.85 }]}
+          onPress={() => setModalVisible(true)}
+        >
+          <Ionicons name="add" size={18} color={colors.white} />
           <Text style={styles.createBtnText}>New</Text>
         </Pressable>
       </View>
@@ -209,7 +207,9 @@ export default function CategoriesScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📂</Text>
+            <View style={styles.emptyIconBox}>
+              <Ionicons name="folder-open-outline" size={32} color={colors.textMuted} />
+            </View>
             <Text style={styles.emptyText}>No categories yet</Text>
             <Text style={styles.emptySub}>Tap "New" to create your first category</Text>
           </View>
@@ -227,11 +227,12 @@ export default function CategoriesScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}
         >
+          <Pressable style={styles.modalBackdrop} onPress={() => setModalVisible(false)} />
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>New Category</Text>
             <Text style={styles.modalSub}>
-              Give it a name like "April 2026" or "Trip to Goa"
+              Give it a name like "May 2026" or "Trip to Goa"
             </Text>
             <TextInput
               style={styles.modalInput}
@@ -272,6 +273,7 @@ export default function CategoriesScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}
         >
+          <Pressable style={styles.modalBackdrop} onPress={() => setRenameModalVisible(false)} />
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Rename Category</Text>
@@ -315,30 +317,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  subHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingTop: 8,
     paddingBottom: 14,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.text,
-  },
   headerSub: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
-    marginTop: 2,
+    fontWeight: '500',
   },
   createBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
@@ -348,29 +345,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   list: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 100,
     gap: 12,
   },
   // ── Category Card ──────────────────────────────────────────────────────────
   card: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
-    flexDirection: 'row',
+    borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   cardActive: {
-    backgroundColor: colors.surfaceLight,
-  },
-  activeAccent: {
-    width: 4,
-    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    borderWidth: 1.5,
   },
   cardBody: {
-    flex: 1,
-    padding: 14,
-    gap: 10,
+    padding: 16,
+    gap: 12,
   },
   cardTop: {
     flexDirection: 'row',
@@ -383,20 +376,29 @@ const styles = StyleSheet.create({
     gap: 8,
     flex: 1,
   },
-  activeBadge: {
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.textMuted,
+  },
+  statusDotActive: {
     backgroundColor: colors.primary,
+  },
+  activeBadge: {
+    backgroundColor: colors.primarySoft,
     borderRadius: 6,
-    paddingHorizontal: 6,
+    paddingHorizontal: 7,
     paddingVertical: 2,
   },
   activeBadgeText: {
-    color: colors.white,
+    color: colors.primary,
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   cardName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.textSecondary,
     flex: 1,
@@ -406,12 +408,12 @@ const styles = StyleSheet.create({
   },
   cardActions: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 6,
   },
   iconBtn: {
     backgroundColor: colors.surfaceLight,
     borderRadius: 8,
-    padding: 6,
+    padding: 7,
   },
   // ── Stats ────────────────────────────────────────────────────────────────
   statsRow: {
@@ -442,8 +444,8 @@ const styles = StyleSheet.create({
   },
   // ── Progress ─────────────────────────────────────────────────────────────
   progressTrack: {
-    height: 6,
-    backgroundColor: colors.border,
+    height: 5,
+    backgroundColor: colors.surfaceLight,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -457,7 +459,15 @@ const styles = StyleSheet.create({
     paddingVertical: 80,
     gap: 8,
   },
-  emptyIcon: { fontSize: 44 },
+  emptyIconBox: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
   emptyText: {
     color: colors.textSecondary,
     fontSize: 16,
@@ -470,8 +480,11 @@ const styles = StyleSheet.create({
   // ── Modal ─────────────────────────────────────────────────────────────────
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   modalSheet: {
     backgroundColor: colors.surface,
@@ -500,14 +513,14 @@ const styles = StyleSheet.create({
     marginTop: -6,
   },
   modalInput: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceLight,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 13,
     color: colors.text,
     fontSize: 15,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: colors.border,
     fontWeight: '600',
   },
   modalBtnRow: {
@@ -520,7 +533,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceLight,
     borderWidth: 1,
     borderColor: colors.border,
   },

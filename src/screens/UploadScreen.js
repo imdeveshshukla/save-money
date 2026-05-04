@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
+import { Ionicons } from '@expo/vector-icons';
 import { useBudget } from '../context/BudgetContext';
 import { colors } from '../theme/colors';
 
@@ -218,15 +219,16 @@ export default function UploadScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        <Text style={styles.heading}>Upload Payment</Text>
+        <Text style={styles.heading}>Scan Payment</Text>
         <Text style={styles.sub}>Capture or select a payment screenshot</Text>
 
         {/* Active Category badge */}
         <View style={styles.categoryBadge}>
-          <Text style={styles.categoryBadgeLabel}>📂 Saving to:</Text>
+          <Ionicons name="folder-open-outline" size={16} color={colors.primary} />
+          <Text style={styles.categoryBadgeLabel}>Saving to:</Text>
           <Text style={styles.categoryBadgeName}>
             {activeCategory?.name ?? 'No category selected'}
           </Text>
@@ -234,12 +236,22 @@ export default function UploadScreen({ navigation, route }) {
 
         {/* Pick buttons */}
         <View style={styles.pickRow}>
-          <Pressable style={styles.pickBtn} onPress={() => pickImage(true)}>
-            <Text style={styles.pickIcon}>📷</Text>
+          <Pressable
+            style={({ pressed }) => [styles.pickBtn, pressed && { opacity: 0.8 }]}
+            onPress={() => pickImage(true)}
+          >
+            <View style={styles.pickIconBox}>
+              <Ionicons name="camera-outline" size={28} color={colors.primary} />
+            </View>
             <Text style={styles.pickText}>Camera</Text>
           </Pressable>
-          <Pressable style={styles.pickBtn} onPress={() => pickImage(false)}>
-            <Text style={styles.pickIcon}>🖼️</Text>
+          <Pressable
+            style={({ pressed }) => [styles.pickBtn, pressed && { opacity: 0.8 }]}
+            onPress={() => pickImage(false)}
+          >
+            <View style={styles.pickIconBox}>
+              <Ionicons name="images-outline" size={28} color="#6366F1" />
+            </View>
             <Text style={styles.pickText}>Gallery</Text>
           </Pressable>
         </View>
@@ -253,30 +265,37 @@ export default function UploadScreen({ navigation, route }) {
             {/* Shared image banner */}
             {isSharedImage && (
               <View style={styles.sharedBanner}>
-                <Text style={styles.sharedBannerIcon}>📤</Text>
-                <View style={styles.ocrText}>
-                  <Text style={styles.sharedBannerTitle}>Received via Share Sheet</Text>
-                  <Text style={styles.ocrSub}>Tap "Add as Expense" to extract &amp; save.</Text>
+                <Ionicons name="share-outline" size={18} color={colors.primary} />
+                <View style={styles.bannerTextBox}>
+                  <Text style={styles.sharedBannerTitle}>Received via Share</Text>
+                  <Text style={styles.bannerSub}>Tap below to extract & save.</Text>
                 </View>
               </View>
             )}
 
-            {/* OCR Banner */}
-            <View style={styles.ocrBanner}>
-              <Text style={styles.ocrIcon}>✨</Text>
-              <View style={styles.ocrText}>
-                <Text style={styles.ocrTitle}>Groq AI Active</Text>
-                <Text style={styles.ocrSub}>
-                  Amount, merchant, and date will be auto-extracted.
+            {/* AI Banner */}
+            <View style={styles.aiBanner}>
+              <Ionicons name="sparkles-outline" size={18} color={colors.primary} />
+              <View style={styles.bannerTextBox}>
+                <Text style={styles.aiTitle}>AI Auto-Extract</Text>
+                <Text style={styles.bannerSub}>
+                  Amount, merchant, and date will be detected.
                 </Text>
               </View>
             </View>
 
-            <Pressable style={styles.addBtn} onPress={handleAddAsExpense} disabled={loading}>
+            <Pressable
+              style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.85 }]}
+              onPress={handleAddAsExpense}
+              disabled={loading}
+            >
               {loading ? (
                 <ActivityIndicator color={colors.white} />
               ) : (
-                <Text style={styles.addBtnText}>➕  Add as Expense</Text>
+                <>
+                  <Ionicons name="add-circle" size={20} color={colors.white} />
+                  <Text style={styles.addBtnText}>Add as Expense</Text>
+                </>
               )}
             </Pressable>
 
@@ -286,7 +305,9 @@ export default function UploadScreen({ navigation, route }) {
           </View>
         ) : (
           <View style={styles.placeholder}>
-            <Text style={styles.placeholderIcon}>📤</Text>
+            <View style={styles.placeholderIconBox}>
+              <Ionicons name="cloud-upload-outline" size={40} color={colors.textMuted} />
+            </View>
             <Text style={styles.placeholderText}>No screenshot selected</Text>
             <Text style={styles.placeholderSub}>
               Use the buttons above to pick an image
@@ -296,12 +317,15 @@ export default function UploadScreen({ navigation, route }) {
 
         {/* Info */}
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>💡 How to use</Text>
-          <Text style={styles.infoText}>
-            1. Take or select a UPI / bank payment screenshot{'\n'}
-            2. Or share a screenshot directly from GPay / PhonePe{'\n'}
-            3. Tap "Add as Expense" — Groq AI extracts all details automatically
-          </Text>
+          <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
+          <View style={styles.infoTextBox}>
+            <Text style={styles.infoTitle}>How to use</Text>
+            <Text style={styles.infoText}>
+              1. Take or select a UPI / bank payment screenshot{'\n'}
+              2. Or share a screenshot directly from GPay / PhonePe{'\n'}
+              3. Tap "Add as Expense" — AI extracts all details
+            </Text>
+          </View>
         </View>
         <View style={{ height: 60 }} />
       </ScrollView>
@@ -316,11 +340,11 @@ const styles = StyleSheet.create({
   },
   scroll: {
     padding: 20,
-    paddingTop: 28,
+    paddingTop: 24,
     gap: 16,
   },
   heading: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '800',
     color: colors.text,
   },
@@ -329,35 +353,66 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: -8,
   },
+  // Category Badge
+  categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primarySoft,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  categoryBadgeLabel: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  categoryBadgeName: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '700',
+    flex: 1,
+  },
+  // Pick Buttons
   pickRow: {
     flexDirection: 'row',
     gap: 12,
   },
   pickBtn: {
     flex: 1,
-    backgroundColor: colors.surfaceLight,
-    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
     paddingVertical: 24,
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  pickIcon: {
-    fontSize: 32,
+  pickIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pickText: {
     color: colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
   },
+  // Preview
   previewCard: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
-    gap: 0,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   preview: {
     width: '100%',
-    height: 280,
+    height: 260,
     backgroundColor: colors.surfaceLight,
   },
   imageName: {
@@ -365,64 +420,59 @@ const styles = StyleSheet.create({
     fontSize: 11,
     paddingHorizontal: 14,
     paddingTop: 8,
-    fontStyle: 'italic',
   },
-  ocrBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: colors.primary + '22',
-    padding: 12,
-    margin: 12,
-    marginBottom: 0,
-    borderRadius: 10,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: colors.primary + '44',
-  },
+  // Banners
   sharedBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#0aaa8022',
+    backgroundColor: colors.primarySoft,
     padding: 12,
     margin: 12,
     marginBottom: 0,
     borderRadius: 10,
     gap: 10,
-    borderWidth: 1,
-    borderColor: '#0aaa8044',
-  },
-  sharedBannerIcon: {
-    fontSize: 22,
   },
   sharedBannerTitle: {
-    color: '#0aaa80',
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '700',
   },
-  ocrIcon: {
-    fontSize: 22,
+  aiBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.primarySoft,
+    padding: 12,
+    margin: 12,
+    marginBottom: 0,
+    borderRadius: 10,
+    gap: 10,
   },
-  ocrText: {
+  bannerTextBox: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
-  ocrTitle: {
-    color: colors.primaryLight,
+  aiTitle: {
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '700',
   },
-  ocrSub: {
+  bannerSub: {
     color: colors.textSecondary,
     fontSize: 12,
     lineHeight: 17,
   },
+  // Buttons
   addBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     backgroundColor: colors.primary,
     marginHorizontal: 12,
-    marginBottom: 10,
-    borderRadius: 12,
+    marginTop: 12,
+    marginBottom: 8,
+    borderRadius: 14,
     paddingVertical: 14,
-    alignItems: 'center',
   },
   addBtnText: {
     color: colors.white,
@@ -432,21 +482,32 @@ const styles = StyleSheet.create({
   clearBtn: {
     alignItems: 'center',
     paddingBottom: 14,
+    paddingTop: 4,
   },
   clearBtnText: {
     color: colors.danger,
     fontSize: 13,
     fontWeight: '600',
   },
+  // Placeholder
   placeholder: {
-    backgroundColor: colors.surfaceLight,
-    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
     paddingVertical: 60,
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
   },
-  placeholderIcon: {
-    fontSize: 44,
+  placeholderIconBox: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
   placeholderText: {
     color: colors.textSecondary,
@@ -457,33 +518,18 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
   },
-  categoryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.primary + '18',
-    borderWidth: 1,
-    borderColor: colors.primary + '44',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  categoryBadgeLabel: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  categoryBadgeName: {
-    color: colors.primaryLight,
-    fontSize: 13,
-    fontWeight: '700',
-    flex: 1,
-  },
+  // Info
   infoCard: {
-    backgroundColor: colors.surfaceLight,
-    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: colors.primarySoft,
+    borderRadius: 14,
     padding: 16,
-    gap: 8,
+  },
+  infoTextBox: {
+    flex: 1,
+    gap: 4,
   },
   infoTitle: {
     color: colors.text,

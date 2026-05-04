@@ -11,6 +11,7 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useBudget } from '../context/BudgetContext';
 import { colors } from '../theme/colors';
 
@@ -63,11 +64,14 @@ export default function AddTransactionScreen({ navigation }) {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
 
-        <Text style={styles.heading}>New Transaction</Text>
-        <Text style={styles.categoryLabel}>📂 {categoryName}</Text>
+        {/* Category tag */}
+        <View style={styles.categoryTag}>
+          <Ionicons name="folder-outline" size={14} color={colors.primary} />
+          <Text style={styles.categoryLabel}>{categoryName}</Text>
+        </View>
 
         {/* Type Toggle */}
         <View style={styles.typeToggle}>
@@ -83,8 +87,13 @@ export default function AddTransactionScreen({ navigation }) {
                 ]}
                 onPress={() => setType(t)}
               >
+                <Ionicons
+                  name={t === 'income' ? 'trending-up' : 'trending-down'}
+                  size={16}
+                  color={isActive ? colors.white : colors.textMuted}
+                />
                 <Text style={[styles.typeBtnText, isActive && styles.typeBtnTextActive]}>
-                  {t === 'income' ? '💰 Income' : '💸 Expense'}
+                  {t === 'income' ? 'Income' : 'Expense'}
                 </Text>
               </Pressable>
             );
@@ -93,52 +102,70 @@ export default function AddTransactionScreen({ navigation }) {
 
         {/* Form */}
         <View style={styles.form}>
-          <Text style={styles.label}>Title *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. Grocery, Salary..."
-            placeholderTextColor={colors.textMuted}
-            value={title}
-            onChangeText={setTitle}
-          />
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Title</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. Grocery, Salary..."
+              placeholderTextColor={colors.textMuted}
+              value={title}
+              onChangeText={setTitle}
+            />
+          </View>
 
-          <Text style={styles.label}>Amount (₹) *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="0.00"
-            placeholderTextColor={colors.textMuted}
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="decimal-pad"
-          />
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Amount</Text>
+            <View style={styles.amountRow}>
+              <Text style={styles.currencyPrefix}>₹</Text>
+              <TextInput
+                style={[styles.input, { flex: 1, borderWidth: 0, paddingHorizontal: 0 }]}
+                placeholder="0.00"
+                placeholderTextColor={colors.textMuted}
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="decimal-pad"
+              />
+            </View>
+          </View>
 
-          <Text style={styles.label}>Date</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor={colors.textMuted}
-            value={date}
-            onChangeText={setDate}
-          />
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Date</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={colors.textMuted}
+              value={date}
+              onChangeText={setDate}
+            />
+          </View>
 
-          <Text style={styles.label}>Note (optional)</Text>
-          <TextInput
-            style={[styles.input, styles.noteInput]}
-            placeholder="Add a note..."
-            placeholderTextColor={colors.textMuted}
-            value={note}
-            onChangeText={setNote}
-            multiline
-            numberOfLines={3}
-          />
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Note (optional)</Text>
+            <TextInput
+              style={[styles.input, styles.noteInput]}
+              placeholder="Add a note..."
+              placeholderTextColor={colors.textMuted}
+              value={note}
+              onChangeText={setNote}
+              multiline
+              numberOfLines={3}
+            />
+          </View>
         </View>
 
         {/* Buttons */}
         <View style={styles.btnRow}>
-          <Pressable style={styles.cancelBtn} onPress={() => navigation.goBack()}>
+          <Pressable
+            style={({ pressed }) => [styles.cancelBtn, pressed && { opacity: 0.8 }]}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.cancelText}>Cancel</Text>
           </Pressable>
-          <Pressable style={styles.saveBtn} onPress={handleSave}>
+          <Pressable
+            style={({ pressed }) => [styles.saveBtn, pressed && { opacity: 0.85 }]}
+            onPress={handleSave}
+          >
+            <Ionicons name="checkmark" size={18} color={colors.white} />
             <Text style={styles.saveText}>Save</Text>
           </Pressable>
         </View>
@@ -150,20 +177,23 @@ export default function AddTransactionScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    paddingTop: 28,
+    paddingTop: 8,
   },
-  heading: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 24,
+  categoryTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primarySoft,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 20,
   },
   categoryLabel: {
     color: colors.primary,
     fontSize: 12,
     fontWeight: '600',
-    marginTop: -18,
-    marginBottom: 8,
   },
   typeToggle: {
     flexDirection: 'row',
@@ -172,12 +202,15 @@ const styles = StyleSheet.create({
   },
   typeBtn: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     paddingVertical: 14,
     borderRadius: 14,
-    alignItems: 'center',
-    backgroundColor: colors.surfaceLight,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.border,
   },
   typeBtnText: {
     color: colors.textSecondary,
@@ -188,25 +221,41 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   form: {
-    gap: 4,
+    gap: 16,
+  },
+  fieldGroup: {
+    gap: 6,
   },
   label: {
     color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    marginTop: 14,
+    fontSize: 13,
+    fontWeight: '600',
   },
   input: {
-    backgroundColor: colors.surfaceLight,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
     color: colors.text,
     fontSize: 16,
     fontWeight: '600',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  amountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  currencyPrefix: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.textMuted,
+    marginRight: 8,
   },
   noteInput: {
     height: 80,
@@ -220,9 +269,11 @@ const styles = StyleSheet.create({
   cancelBtn: {
     flex: 1,
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 14,
     alignItems: 'center',
-    backgroundColor: colors.surfaceLight,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   cancelText: {
     color: colors.textSecondary,
@@ -231,9 +282,12 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     flex: 1,
-    paddingVertical: 16,
-    borderRadius: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 16,
+    borderRadius: 14,
     backgroundColor: colors.primary,
   },
   saveText: {

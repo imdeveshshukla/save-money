@@ -14,7 +14,7 @@ export default function SummaryCard({ title, amount, type, icon }) {
 
   return (
     <View style={styles.card}>
-      <View style={[styles.iconBox, { backgroundColor: amountColor + '22' }]}>
+      <View style={[styles.iconBox, { backgroundColor: amountColor + '14' }]}>
         <Text style={[styles.icon, { color: amountColor }]}>{icon}</Text>
       </View>
       <Text style={styles.title}>{title}</Text>
@@ -28,33 +28,34 @@ export default function SummaryCard({ title, amount, type, icon }) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 16,
+    borderRadius: 16,
+    padding: 14,
     flex: 1,
-    marginHorizontal: 4,
     alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   icon: {
-    fontSize: 20,
+    fontSize: 18,
   },
   title: {
-    fontSize: 12,
-    color: colors.textSecondary,
+    fontSize: 11,
+    color: colors.textMuted,
     marginBottom: 4,
     fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   amount: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.2,
   },

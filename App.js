@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useShareIntent } from 'expo-share-intent';
+import { View, Platform } from 'react-native';
 
 import { BudgetProvider } from './src/context/BudgetContext';
 import { colors } from './src/theme/colors';
@@ -16,17 +17,16 @@ import UploadScreen from './src/screens/UploadScreen';
 import AddTransactionScreen from './src/screens/AddTransactionScreen';
 import CategoriesScreen from './src/screens/CategoriesScreen';
 import DataScreen from './src/screens/DataScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 const TAB_ICONS = {
-  Dashboard: ['home', 'home-outline'],
-  Transactions: ['list', 'list-outline'],
-  Budget: ['wallet', 'wallet-outline'],
-  Upload: ['camera', 'camera-outline'],
-  Categories: ['folder', 'folder-outline'],
-  Data: ['server', 'server-outline'],
+  Home: ['home', 'home-outline'],
+  Transactions: ['receipt', 'receipt-outline'],
+  Scan: ['scan', 'scan-outline'],
+  More: ['grid', 'grid-outline'],
 };
 
 function TabNavigator() {
@@ -35,33 +35,35 @@ function TabNavigator() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#09090B',
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-          paddingBottom: 10,
-          paddingTop: 8,
-          height: 64,
+          backgroundColor: colors.tabBar,
+          borderTopWidth: 1,
+          borderTopColor: colors.tabBarBorder,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+          paddingTop: 10,
+          height: Platform.OS === 'ios' ? 88 : 68,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
+          fontSize: 11,
+          fontWeight: '600',
           marginTop: 2,
         },
         tabBarIcon: ({ focused, color, size }) => {
           const [active, inactive] = TAB_ICONS[route.name] || ['apps', 'apps-outline'];
-          return <Ionicons name={focused ? active : inactive} size={size} color={color} />;
+          return <Ionicons name={focused ? active : inactive} size={22} color={color} />;
         },
       })}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Home" component={DashboardScreen} />
       <Tab.Screen name="Transactions" component={TransactionsScreen} />
-      <Tab.Screen name="Budget" component={BudgetScreen} />
-      <Tab.Screen name="Upload" component={UploadScreen} />
-      <Tab.Screen name="Categories" component={CategoriesScreen} />
-      <Tab.Screen name="Data" component={DataScreen} />
+      <Tab.Screen name="Scan" component={UploadScreen} />
+      <Tab.Screen name="More" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
@@ -94,7 +96,7 @@ export default function App() {
   useEffect(() => {
     if (isNavigationReady && pendingShareUri && navigationRef.current) {
       navigationRef.current.navigate('Main', {
-        screen: 'Upload',
+        screen: 'Scan',
         params: { sharedImageUri: pendingShareUri },
       });
       setPendingShareUri(null);
@@ -122,8 +124,77 @@ export default function App() {
                 options={{
                   presentation: 'modal',
                   headerShown: true,
-                  headerTitle: '',
-                  headerStyle: { backgroundColor: colors.background },
+                  headerTitle: 'Add Entry',
+                  headerTitleStyle: {
+                    fontWeight: '700',
+                    fontSize: 17,
+                    color: colors.text,
+                  },
+                  headerStyle: {
+                    backgroundColor: colors.background,
+                    elevation: 0,
+                    shadowOpacity: 0,
+                  },
+                  headerTintColor: colors.primary,
+                  headerShadowVisible: false,
+                }}
+              />
+              <Stack.Screen
+                name="Budget"
+                component={BudgetScreen}
+                options={{
+                  headerShown: true,
+                  headerTitle: 'Set Budget',
+                  headerTitleStyle: {
+                    fontWeight: '700',
+                    fontSize: 17,
+                    color: colors.text,
+                  },
+                  headerStyle: {
+                    backgroundColor: colors.background,
+                    elevation: 0,
+                    shadowOpacity: 0,
+                  },
+                  headerTintColor: colors.primary,
+                  headerShadowVisible: false,
+                }}
+              />
+              <Stack.Screen
+                name="Categories"
+                component={CategoriesScreen}
+                options={{
+                  headerShown: true,
+                  headerTitle: 'Categories',
+                  headerTitleStyle: {
+                    fontWeight: '700',
+                    fontSize: 17,
+                    color: colors.text,
+                  },
+                  headerStyle: {
+                    backgroundColor: colors.background,
+                    elevation: 0,
+                    shadowOpacity: 0,
+                  },
+                  headerTintColor: colors.primary,
+                  headerShadowVisible: false,
+                }}
+              />
+              <Stack.Screen
+                name="Data"
+                component={DataScreen}
+                options={{
+                  headerShown: true,
+                  headerTitle: 'Backup & Restore',
+                  headerTitleStyle: {
+                    fontWeight: '700',
+                    fontSize: 17,
+                    color: colors.text,
+                  },
+                  headerStyle: {
+                    backgroundColor: colors.background,
+                    elevation: 0,
+                    shadowOpacity: 0,
+                  },
                   headerTintColor: colors.primary,
                   headerShadowVisible: false,
                 }}
