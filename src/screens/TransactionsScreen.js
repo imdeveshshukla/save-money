@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
   Pressable,
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useBudget } from '../context/BudgetContext';
-import TransactionCard from '../components/TransactionCard';
+import DateGroupedList from '../components/DateGroupedList';
 import { colors } from '../theme/colors';
 
 const FILTERS = ['All', 'Income', 'Expense'];
@@ -17,6 +16,7 @@ const FILTERS = ['All', 'Income', 'Expense'];
 export default function TransactionsScreen() {
   const { transactions, deleteTransaction, activeCategory } = useBudget();
   const [filter, setFilter] = useState('All');
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const categoryName = activeCategory?.name ?? '';
 
@@ -29,54 +29,50 @@ export default function TransactionsScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Transactions</Text>
-          {categoryName ? (
-            <Text style={styles.categoryLabel}>{categoryName}</Text>
-          ) : null}
-        </View>
-        <View style={styles.countBadge}>
-          <Text style={styles.count}>{filtered.length}</Text>
-        </View>
-      </View>
+      <DateGroupedList
+        transactions={filtered}
+        onDelete={deleteTransaction}
+        onDateFilter={setSelectedDate}
+        selectedDate={selectedDate}
+        contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          <>
+            {/* Header */}
+            <View style={styles.header}>
+              <View>
+                <Text style={styles.title}>Transactions</Text>
+                {categoryName ? (
+                  <Text style={styles.categoryLabel}>{categoryName}</Text>
+                ) : null}
+              </View>
+              <View style={styles.countBadge}>
+                <Text style={styles.count}>{filtered.length}</Text>
+              </View>
+            </View>
 
-      {/* Filter Pills */}
-      <View style={styles.filterRow}>
-        {FILTERS.map((f) => (
-          <Pressable
-            key={f}
-            onPress={() => setFilter(f)}
-            style={[
-              styles.pill,
-              filter === f && styles.pillActive,
-            ]}
-          >
-            <Text style={[styles.pillText, filter === f && styles.pillTextActive]}>
-              {f}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {filtered.length === 0 ? (
-        <View style={styles.empty}>
-          <View style={styles.emptyIconBox}>
-            <Ionicons name="search-outline" size={32} color={colors.textMuted} />
-          </View>
-          <Text style={styles.emptyText}>No transactions found</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <TransactionCard transaction={item} onDelete={deleteTransaction} />
-          )}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+            {/* Filter Pills */}
+            <View style={styles.filterRow}>
+              {FILTERS.map((f) => (
+                <Pressable
+                  key={f}
+                  onPress={() => {
+                    setFilter(f);
+                    setSelectedDate(null); // reset date filter when type changes
+                  }}
+                  style={[
+                    styles.pill,
+                    filter === f && styles.pillActive,
+                  ]}
+                >
+                  <Text style={[styles.pillText, filter === f && styles.pillTextActive]}>
+                    {f}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </>
+        }
+      />
     </View>
   );
 }
@@ -120,7 +116,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 4,
   },
   pill: {
     paddingHorizontal: 18,
@@ -143,26 +139,6 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   list: {
-    paddingHorizontal: 20,
     paddingBottom: 100,
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  emptyIconBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: colors.surfaceLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

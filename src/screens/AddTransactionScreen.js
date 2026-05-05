@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useBudget } from '../context/BudgetContext';
 import { colors } from '../theme/colors';
+import CalculatorInput from '../components/CalculatorInput';
+import DatePickerModal from '../components/DatePickerModal';
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -22,6 +24,25 @@ function generateId() {
 function todayString() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatDisplayDate(dateStr) {
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+
+  if (target.getTime() === today.getTime()) return 'Today';
+
+  return d.toLocaleDateString('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export default function AddTransactionScreen({ navigation }) {
@@ -34,13 +55,48 @@ export default function AddTransactionScreen({ navigation }) {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(todayString());
   const [note, setNote] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const handleAmountChange = useCallback((val) => {
+    setAmount(val);
+  }, []);
+
+  function evaluateAmount(expr) {
+    // Safe evaluation for + and - only
+    const cleaned = expr.replace(/\s/g, '');
+    if (!cleaned) return 0;
+    const tokens = [];
+    let current = '';
+    for (let i = 0; i < cleaned.length; i++) {
+      const ch = cleaned[i];
+      if ((ch === '+' || ch === '-') && current.length > 0) {
+        tokens.push(parseFloat(current));
+        tokens.push(ch);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    if (current) tokens.push(parseFloat(current));
+    if (tokens.length === 0) return 0;
+    let result = typeof tokens[0] === 'number' ? tokens[0] : 0;
+    for (let i = 1; i < tokens.length; i += 2) {
+      const op = tokens[i];
+      const num = typeof tokens[i + 1] === 'number' ? tokens[i + 1] : 0;
+      if (op === '+') result += num;
+      else if (op === '-') result -= num;
+    }
+    return isNaN(result) ? 0 : Math.round(result * 100) / 100;
+  }
 
   function handleSave() {
     if (!title.trim()) {
       Alert.alert('Validation', 'Please enter a title.');
       return;
     }
-    const amtNum = parseFloat(amount);
+
+    // Resolve any expression in the amount field
+    const amtNum = evaluateAmount(amount);
     if (isNaN(amtNum) || amtNum <= 0) {
       Alert.alert('Validation', 'Please enter a valid amount.');
       return;
@@ -113,30 +169,29 @@ export default function AddTransactionScreen({ navigation }) {
             />
           </View>
 
+          {/* Calculator-style Amount Input */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Amount</Text>
-            <View style={styles.amountRow}>
-              <Text style={styles.currencyPrefix}>₹</Text>
-              <TextInput
-                style={[styles.input, { flex: 1, borderWidth: 0, paddingHorizontal: 0 }]}
-                placeholder="0.00"
-                placeholderTextColor={colors.textMuted}
-                value={amount}
-                onChangeText={setAmount}
-                keyboardType="decimal-pad"
-              />
-            </View>
+            <CalculatorInput
+              value={amount}
+              onValueChange={handleAmountChange}
+            />
           </View>
 
+          {/* Date Picker */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Date</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.textMuted}
-              value={date}
-              onChangeText={setDate}
-            />
+            <Pressable
+              style={({ pressed }) => [styles.dateBtn, pressed && { backgroundColor: colors.surfaceLight }]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+              <Text style={styles.dateBtnText}>
+                {formatDisplayDate(date)}
+              </Text>
+              <Text style={styles.dateBtnRaw}>{date}</Text>
+              <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+            </Pressable>
           </View>
 
           <View style={styles.fieldGroup}>
@@ -170,6 +225,14 @@ export default function AddTransactionScreen({ navigation }) {
           </Pressable>
         </View>
       </ScrollView>
+
+      {/* Date Picker Modal */}
+      <DatePickerModal
+        visible={showDatePicker}
+        selectedDate={date}
+        onSelectDate={setDate}
+        onClose={() => setShowDatePicker(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -242,20 +305,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  amountRow: {
+  // Date button (replaces text input)
+  dateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
     backgroundColor: colors.surface,
     borderRadius: 14,
     paddingHorizontal: 16,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  currencyPrefix: {
-    fontSize: 18,
+  dateBtnText: {
+    flex: 1,
+    fontSize: 16,
     fontWeight: '700',
+    color: colors.text,
+  },
+  dateBtnRaw: {
+    fontSize: 12,
     color: colors.textMuted,
-    marginRight: 8,
+    fontWeight: '500',
   },
   noteInput: {
     height: 80,

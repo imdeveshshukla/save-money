@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,27 @@ import TransactionCard from '../components/TransactionCard';
 import { colors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 
+// ── Date helpers (same as DateGroupedList) ──────────────────────────────────
+function formatDateLabel(dateStr) {
+  const parts = dateStr?.split('-');
+  if (!parts || parts.length !== 3) return dateStr;
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+
+  if (target.getTime() === today.getTime()) return 'Today';
+  if (target.getTime() === yesterday.getTime()) return 'Yesterday';
+  return d.toLocaleDateString('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
 export default function DashboardScreen({ navigation }) {
   const {
     budget,
@@ -26,8 +47,25 @@ export default function DashboardScreen({ navigation }) {
     activeCategory,
   } = useBudget();
 
-  const recentTransactions = transactions.slice(0, 5);
+  const recentTransactions = transactions.slice(0, 8);
   const categoryName = activeCategory?.name ?? 'No Category';
+
+  // Group recent transactions by date
+  const recentGroups = useMemo(() => {
+    const groups = {};
+    recentTransactions.forEach((t) => {
+      const key = t.date || 'Unknown';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(t);
+    });
+    return Object.keys(groups)
+      .sort((a, b) => b.localeCompare(a))
+      .map((date) => ({
+        date,
+        label: formatDateLabel(date),
+        transactions: groups[date],
+      }));
+  }, [recentTransactions]);
 
   if (loading) {
     return (
@@ -82,17 +120,17 @@ export default function DashboardScreen({ navigation }) {
           <SummaryCard title="Expense" amount={totalExpense} type="expense" icon="💸" />
         </View>
 
-        {/* Recent Transactions */}
+        {/* Recent Transactions (Date Grouped) */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Recent</Text>
-          {transactions.length > 5 && (
+          {transactions.length > 8 && (
             <Pressable onPress={() => navigation.navigate('Transactions')}>
               <Text style={styles.seeAll}>See all</Text>
             </Pressable>
           )}
         </View>
 
-        {recentTransactions.length === 0 ? (
+        {recentGroups.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconBox}>
               <Ionicons name="receipt-outline" size={32} color={colors.textMuted} />
@@ -101,8 +139,24 @@ export default function DashboardScreen({ navigation }) {
             <Text style={styles.emptySubText}>Tap + to add your first entry</Text>
           </View>
         ) : (
-          recentTransactions.map((t) => (
-            <TransactionCard key={t.id} transaction={t} onDelete={deleteTransaction} />
+          recentGroups.map((group) => (
+            <View key={group.date}>
+              {/* Date separator */}
+              <View style={styles.dateSeparator}>
+                <View style={styles.dateDot} />
+                <Text style={styles.dateLabel}>{group.label}</Text>
+                <View style={styles.dateLine} />
+              </View>
+              {/* Transactions for this date */}
+              {group.transactions.map((t) => (
+                <TransactionCard
+                  key={t.id}
+                  transaction={t}
+                  onDelete={deleteTransaction}
+                  hideDate
+                />
+              ))}
+            </View>
           ))
         )}
 
@@ -215,6 +269,30 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 13,
     fontWeight: '600',
+  },
+  // Date separator
+  dateSeparator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  dateDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+  },
+  dateLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  dateLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+    marginLeft: 4,
   },
   // Empty
   emptyState: {

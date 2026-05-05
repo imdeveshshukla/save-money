@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 
-export default function TransactionCard({ transaction, onDelete }) {
+export default function TransactionCard({ transaction, onDelete, hideDate }) {
   const isIncome = transaction.type === 'income';
   const accentColor = isIncome ? colors.income : colors.expense;
   const sign = isIncome ? '+' : '-';
@@ -21,7 +21,7 @@ export default function TransactionCard({ transaction, onDelete }) {
 
       <View style={styles.info}>
         <Text style={styles.title} numberOfLines={1}>{transaction.title}</Text>
-        <Text style={styles.date}>{transaction.date}</Text>
+        {!hideDate && <Text style={styles.date}>{transaction.date}</Text>}
         {transaction.note ? (
           <Text style={styles.note} numberOfLines={1}>{transaction.note}</Text>
         ) : null}
