@@ -91,7 +91,7 @@ export default function CalculatorInput({ value, onValueChange, onAmountResolved
           placeholderTextColor={colors.textMuted}
           value={expression}
           onChangeText={handleChange}
-          keyboardType="decimal-pad"
+          keyboardType="default"
         />
         {hasOperator(expression) && (
           <Pressable
