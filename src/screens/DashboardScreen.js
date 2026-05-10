@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,27 @@ import BudgetProgressBar from '../components/BudgetProgressBar';
 import TransactionCard from '../components/TransactionCard';
 import { colors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+
+// ── Date helpers (same as DateGroupedList) ──────────────────────────────────
+function formatDateLabel(dateStr) {
+  const parts = dateStr?.split('-');
+  if (!parts || parts.length !== 3) return dateStr;
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+
+  if (target.getTime() === today.getTime()) return 'Today';
+  if (target.getTime() === yesterday.getTime()) return 'Yesterday';
+  return d.toLocaleDateString('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+}
 
 export default function DashboardScreen({ navigation }) {
   const {
@@ -27,8 +47,25 @@ export default function DashboardScreen({ navigation }) {
     activeCategory,
   } = useBudget();
 
-  const recentTransactions = transactions.slice(0, 5);
+  const recentTransactions = transactions.slice(0, 8);
   const categoryName = activeCategory?.name ?? 'No Category';
+
+  // Group recent transactions by date
+  const recentGroups = useMemo(() => {
+    const groups = {};
+    recentTransactions.forEach((t) => {
+      const key = t.date || 'Unknown';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(t);
+    });
+    return Object.keys(groups)
+      .sort((a, b) => b.localeCompare(a))
+      .map((date) => ({
+        date,
+        label: formatDateLabel(date),
+        transactions: groups[date],
+      }));
+  }, [recentTransactions]);
 
   if (loading) {
     return (
@@ -40,42 +77,38 @@ export default function DashboardScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Header */}
       <View style={styles.header}>
         <View style={{ flex: 1, marginRight: 10 }}>
-          <View style={styles.categoryPill}>
-            <Ionicons name="folder-open-outline" size={12} color={colors.primary} />
-            <Text style={styles.categoryPillText}>Active Category</Text>
-          </View>
-          <Text style={styles.month} numberOfLines={1}>{categoryName}</Text>
+          <Text style={styles.greeting}>Hello 👋</Text>
+          <Text style={styles.categoryName} numberOfLines={1}>{categoryName}</Text>
         </View>
         <Pressable
           style={styles.setBudgetBtn}
           onPress={() => navigation.navigate('Budget')}
         >
-          <Text style={styles.setBudgetText}>Set Budget</Text>
+          <Ionicons name="wallet-outline" size={16} color={colors.primary} />
+          <Text style={styles.setBudgetText}>Budget</Text>
         </Pressable>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-        {/* Remaining Balance Card */}
-        <LinearGradient
-          colors={['#4F46E5', '#7C3AED']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.balanceCard}
-        >
+        {/* Balance Card */}
+        <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>Remaining Balance</Text>
-          <Text style={[styles.balanceAmount, { color: remaining >= 0 ? colors.white : '#FEE2E2' }]}>
-            ₹{Number(remaining).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <Text style={[styles.balanceAmount, remaining < 0 && { color: colors.expense }]}>
+            ₹{Number(Math.abs(remaining)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </Text>
-          {budget === 0 && (
-            <Text style={styles.noBudget}>Set a monthly budget to get started →</Text>
+          {remaining < 0 && (
+            <Text style={styles.overspent}>Over budget</Text>
           )}
-        </LinearGradient>
+          {budget === 0 && (
+            <Text style={styles.noBudget}>Set a monthly budget to get started</Text>
+          )}
+        </View>
 
         {/* Budget Progress */}
         <BudgetProgressBar spent={totalExpense} budget={budget} />
@@ -87,25 +120,43 @@ export default function DashboardScreen({ navigation }) {
           <SummaryCard title="Expense" amount={totalExpense} type="expense" icon="💸" />
         </View>
 
-        {/* Recent Transactions */}
+        {/* Recent Transactions (Date Grouped) */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Transactions</Text>
-          {transactions.length > 5 && (
+          <Text style={styles.sectionTitle}>Recent</Text>
+          {transactions.length > 8 && (
             <Pressable onPress={() => navigation.navigate('Transactions')}>
               <Text style={styles.seeAll}>See all</Text>
             </Pressable>
           )}
         </View>
 
-        {recentTransactions.length === 0 ? (
+        {recentGroups.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📋</Text>
+            <View style={styles.emptyIconBox}>
+              <Ionicons name="receipt-outline" size={32} color={colors.textMuted} />
+            </View>
             <Text style={styles.emptyText}>No transactions yet</Text>
             <Text style={styles.emptySubText}>Tap + to add your first entry</Text>
           </View>
         ) : (
-          recentTransactions.map((t) => (
-            <TransactionCard key={t.id} transaction={t} onDelete={deleteTransaction} />
+          recentGroups.map((group) => (
+            <View key={group.date}>
+              {/* Date separator */}
+              <View style={styles.dateSeparator}>
+                <View style={styles.dateDot} />
+                <Text style={styles.dateLabel}>{group.label}</Text>
+                <View style={styles.dateLine} />
+              </View>
+              {/* Transactions for this date */}
+              {group.transactions.map((t) => (
+                <TransactionCard
+                  key={t.id}
+                  transaction={t}
+                  onDelete={deleteTransaction}
+                  hideDate
+                />
+              ))}
+            </View>
           ))
         )}
 
@@ -114,10 +165,10 @@ export default function DashboardScreen({ navigation }) {
 
       {/* FAB */}
       <Pressable
-        style={styles.fab}
+        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
         onPress={() => navigation.navigate('AddTransaction')}
       >
-        <Text style={styles.fabIcon}>＋</Text>
+        <Ionicons name="add" size={28} color={colors.white} />
       </Pressable>
     </View>
   );
@@ -129,83 +180,80 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scroll: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    gap: 12,
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    gap: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 16,
+    paddingBottom: 12,
   },
-  categoryPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 4,
+  greeting: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 2,
   },
-  categoryPillText: {
-    color: colors.primary,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  month: {
+  categoryName: {
     color: colors.text,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
   },
   setBudgetBtn: {
-    backgroundColor: colors.primary + '22',
-    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primarySoft,
+    borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: colors.primary + '44',
+    paddingVertical: 10,
   },
   setBudgetText: {
-    color: colors.primaryLight,
+    color: colors.primary,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
+  // Balance Card
   balanceCard: {
-    borderRadius: 24,
+    backgroundColor: colors.primary,
+    borderRadius: 20,
     padding: 28,
     alignItems: 'center',
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.4,
-    shadowRadius: 24,
-    elevation: 12,
-    marginBottom: 8,
   },
   balanceLabel: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 13,
     marginBottom: 8,
     fontWeight: '500',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   balanceAmount: {
-    fontSize: 42,
+    fontSize: 38,
     fontWeight: '800',
     color: colors.white,
-    letterSpacing: -1,
+    letterSpacing: -0.5,
+  },
+  overspent: {
+    color: '#FEE2E2',
+    fontSize: 12,
+    marginTop: 6,
+    fontWeight: '600',
   },
   noBudget: {
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.5)',
     fontSize: 12,
     marginTop: 8,
-    fontStyle: 'italic',
   },
+  // Cards
   cardsRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
+  // Section
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -214,7 +262,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
   },
   seeAll: {
@@ -222,13 +270,44 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  // Date separator
+  dateSeparator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  dateDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+  },
+  dateLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  dateLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+    marginLeft: 4,
+  },
+  // Empty
   emptyState: {
     alignItems: 'center',
     paddingVertical: 40,
+    gap: 8,
   },
-  emptyIcon: {
-    fontSize: 40,
-    marginBottom: 12,
+  emptyIconBox: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
   emptyText: {
     color: colors.textSecondary,
@@ -238,28 +317,26 @@ const styles = StyleSheet.create({
   emptySubText: {
     color: colors.textMuted,
     fontSize: 13,
-    marginTop: 4,
   },
+  // FAB
   fab: {
     position: 'absolute',
-    bottom: 28,
+    bottom: 24,
     right: 20,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#6366F1',
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 12,
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
+    elevation: 6,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  fabIcon: {
-    color: colors.white,
-    fontSize: 32,
-    lineHeight: 36,
-    marginLeft: 2,
+  fabPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.95 }],
   },
 });

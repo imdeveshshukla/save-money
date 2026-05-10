@@ -139,7 +139,7 @@ export default function DataScreen() {
                 Alert.alert('Import Failed', err);
               } else {
                 Alert.alert(
-                  '✅ Import Successful',
+                  'Import Successful',
                   `Restored ${catCount} categories and ${txCount} transactions.`
                 );
               }
@@ -157,28 +157,27 @@ export default function DataScreen() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <Text style={styles.heading}>Data & Backup</Text>
-        <Text style={styles.sub}>Export your data to a file or restore from a previous backup</Text>
-
         {/* Current data summary */}
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Current Data</Text>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Ionicons name="folder-open-outline" size={22} color={colors.primary} />
+              <View style={[styles.summaryIconBox, { backgroundColor: colors.primarySoft }]}>
+                <Ionicons name="folder-open-outline" size={22} color={colors.primary} />
+              </View>
               <Text style={styles.summaryValue}>{totalCategories}</Text>
               <Text style={styles.summaryLabel}>Categories</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
-              <Ionicons name="receipt-outline" size={22} color={colors.income} />
+              <View style={[styles.summaryIconBox, { backgroundColor: colors.incomeLight }]}>
+                <Ionicons name="receipt-outline" size={22} color={colors.income} />
+              </View>
               <Text style={styles.summaryValue}>{totalTransactions}</Text>
               <Text style={styles.summaryLabel}>Transactions</Text>
             </View>
@@ -188,13 +187,13 @@ export default function DataScreen() {
         {/* Export card */}
         <View style={styles.actionCard}>
           <View style={styles.actionHeader}>
-            <View style={[styles.actionIconBox, { backgroundColor: colors.primary + '20' }]}>
+            <View style={[styles.actionIconBox, { backgroundColor: colors.primarySoft }]}>
               <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
             </View>
             <View style={styles.actionText}>
               <Text style={styles.actionTitle}>Export Backup</Text>
               <Text style={styles.actionDesc}>
-                Save a .budgetapp file to your device, Google Drive, WhatsApp, or any other app.
+                Save a .budgetapp file to your device, Drive, or any other app.
               </Text>
             </View>
           </View>
@@ -203,13 +202,18 @@ export default function DataScreen() {
             <View style={styles.lastInfo}>
               <Ionicons name="checkmark-circle-outline" size={14} color={colors.income} />
               <Text style={styles.lastInfoText}>
-                Last export: {lastExportInfo.fileName} ({lastExportInfo.size}) at {lastExportInfo.time}
+                Last: {lastExportInfo.fileName} ({lastExportInfo.size}) at {lastExportInfo.time}
               </Text>
             </View>
           )}
 
           <Pressable
-            style={[styles.btn, styles.exportBtn, exporting && styles.btnDisabled]}
+            style={({ pressed }) => [
+              styles.btn,
+              styles.exportBtn,
+              exporting && styles.btnDisabled,
+              pressed && { opacity: 0.85 },
+            ]}
             onPress={handleExport}
             disabled={exporting}
           >
@@ -227,13 +231,13 @@ export default function DataScreen() {
         {/* Import card */}
         <View style={styles.actionCard}>
           <View style={styles.actionHeader}>
-            <View style={[styles.actionIconBox, { backgroundColor: colors.warning + '20' }]}>
+            <View style={[styles.actionIconBox, { backgroundColor: colors.warning + '18' }]}>
               <Ionicons name="cloud-download-outline" size={24} color={colors.warning} />
             </View>
             <View style={styles.actionText}>
               <Text style={styles.actionTitle}>Import Backup</Text>
               <Text style={styles.actionDesc}>
-                Restore data from a .budgetapp file. Your current data will be replaced.
+                Restore data from a .budgetapp file. Current data will be replaced.
               </Text>
             </View>
           </View>
@@ -241,12 +245,17 @@ export default function DataScreen() {
           <View style={styles.warningBanner}>
             <Ionicons name="warning-outline" size={14} color={colors.warning} />
             <Text style={styles.warningText}>
-              Import replaces ALL existing categories and transactions. Export first if you want to keep your current data.
+              Import replaces ALL existing data. Export first if you want to keep current data.
             </Text>
           </View>
 
           <Pressable
-            style={[styles.btn, styles.importBtn, importing && styles.btnDisabled]}
+            style={({ pressed }) => [
+              styles.btn,
+              styles.importBtn,
+              importing && styles.btnDisabled,
+              pressed && { opacity: 0.85 },
+            ]}
             onPress={handleImport}
             disabled={importing}
           >
@@ -263,14 +272,17 @@ export default function DataScreen() {
 
         {/* How-to guide */}
         <View style={styles.guideCard}>
-          <Text style={styles.guideTitle}>💡 How to transfer to a new phone</Text>
+          <View style={styles.guideHeader}>
+            <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
+            <Text style={styles.guideTitle}>Transfer to a new phone</Text>
+          </View>
           <View style={styles.guideSteps}>
             {[
               'On your old phone — tap "Export & Share"',
-              'Send the .budgetapp file to yourself (WhatsApp, Email, Drive, etc.)',
+              'Send the file via WhatsApp, Email, or Drive',
               'On your new phone — install BudgetApp',
-              'Open the file or come here and tap "Select Backup File"',
-              'All your categories and transactions will be restored',
+              'Open the file or tap "Select Backup File"',
+              'All your data will be restored',
             ].map((step, i) => (
               <View key={i} style={styles.guideStep}>
                 <View style={styles.guideStepNum}>
@@ -294,35 +306,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scroll: {
-    padding: 16,
-    paddingTop: 20,
-    gap: 14,
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  sub: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: -6,
-    lineHeight: 18,
+    padding: 20,
+    paddingTop: 12,
+    gap: 16,
   },
 
   // ── Summary ──────────────────────────────────────────────────────────────
   summaryCard: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 20,
-    gap: 12,
-  },
-  summaryTitle: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -331,7 +326,14 @@ const styles = StyleSheet.create({
   summaryItem: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+  },
+  summaryIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   summaryDivider: {
     width: 1,
@@ -352,9 +354,11 @@ const styles = StyleSheet.create({
   // ── Action cards ──────────────────────────────────────────────────────────
   actionCard: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 20,
     gap: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   actionHeader: {
     flexDirection: 'row',
@@ -364,7 +368,7 @@ const styles = StyleSheet.create({
   actionIconBox: {
     width: 46,
     height: 46,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -386,7 +390,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.income + '14',
+    backgroundColor: colors.incomeLight,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 7,
@@ -421,7 +425,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 13,
+    borderRadius: 14,
   },
   btnDisabled: {
     opacity: 0.55,
@@ -441,9 +445,16 @@ const styles = StyleSheet.create({
   // ── How-to guide ──────────────────────────────────────────────────────────
   guideCard: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 20,
     gap: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  guideHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   guideTitle: {
     fontSize: 14,
@@ -462,7 +473,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: colors.primary + '30',
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
@@ -470,7 +481,7 @@ const styles = StyleSheet.create({
   guideStepNumText: {
     fontSize: 11,
     fontWeight: '800',
-    color: colors.primaryLight,
+    color: colors.primary,
   },
   guideStepText: {
     flex: 1,

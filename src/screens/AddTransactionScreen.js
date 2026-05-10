@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,11 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useBudget } from '../context/BudgetContext';
 import { colors } from '../theme/colors';
+import CalculatorInput from '../components/CalculatorInput';
+import DatePickerModal from '../components/DatePickerModal';
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -21,6 +24,25 @@ function generateId() {
 function todayString() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatDisplayDate(dateStr) {
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+
+  if (target.getTime() === today.getTime()) return 'Today';
+
+  return d.toLocaleDateString('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export default function AddTransactionScreen({ navigation }) {
@@ -33,13 +55,48 @@ export default function AddTransactionScreen({ navigation }) {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(todayString());
   const [note, setNote] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const handleAmountChange = useCallback((val) => {
+    setAmount(val);
+  }, []);
+
+  function evaluateAmount(expr) {
+    // Safe evaluation for + and - only
+    const cleaned = expr.replace(/\s/g, '');
+    if (!cleaned) return 0;
+    const tokens = [];
+    let current = '';
+    for (let i = 0; i < cleaned.length; i++) {
+      const ch = cleaned[i];
+      if ((ch === '+' || ch === '-') && current.length > 0) {
+        tokens.push(parseFloat(current));
+        tokens.push(ch);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    if (current) tokens.push(parseFloat(current));
+    if (tokens.length === 0) return 0;
+    let result = typeof tokens[0] === 'number' ? tokens[0] : 0;
+    for (let i = 1; i < tokens.length; i += 2) {
+      const op = tokens[i];
+      const num = typeof tokens[i + 1] === 'number' ? tokens[i + 1] : 0;
+      if (op === '+') result += num;
+      else if (op === '-') result -= num;
+    }
+    return isNaN(result) ? 0 : Math.round(result * 100) / 100;
+  }
 
   function handleSave() {
     if (!title.trim()) {
       Alert.alert('Validation', 'Please enter a title.');
       return;
     }
-    const amtNum = parseFloat(amount);
+
+    // Resolve any expression in the amount field
+    const amtNum = evaluateAmount(amount);
     if (isNaN(amtNum) || amtNum <= 0) {
       Alert.alert('Validation', 'Please enter a valid amount.');
       return;
@@ -63,11 +120,14 @@ export default function AddTransactionScreen({ navigation }) {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
 
-        <Text style={styles.heading}>New Transaction</Text>
-        <Text style={styles.categoryLabel}>📂 {categoryName}</Text>
+        {/* Category tag */}
+        <View style={styles.categoryTag}>
+          <Ionicons name="folder-outline" size={14} color={colors.primary} />
+          <Text style={styles.categoryLabel}>{categoryName}</Text>
+        </View>
 
         {/* Type Toggle */}
         <View style={styles.typeToggle}>
@@ -83,8 +143,13 @@ export default function AddTransactionScreen({ navigation }) {
                 ]}
                 onPress={() => setType(t)}
               >
+                <Ionicons
+                  name={t === 'income' ? 'trending-up' : 'trending-down'}
+                  size={16}
+                  color={isActive ? colors.white : colors.textMuted}
+                />
                 <Text style={[styles.typeBtnText, isActive && styles.typeBtnTextActive]}>
-                  {t === 'income' ? '💰 Income' : '💸 Expense'}
+                  {t === 'income' ? 'Income' : 'Expense'}
                 </Text>
               </Pressable>
             );
@@ -93,56 +158,81 @@ export default function AddTransactionScreen({ navigation }) {
 
         {/* Form */}
         <View style={styles.form}>
-          <Text style={styles.label}>Title *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. Grocery, Salary..."
-            placeholderTextColor={colors.textMuted}
-            value={title}
-            onChangeText={setTitle}
-          />
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Title</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. Grocery, Salary..."
+              placeholderTextColor={colors.textMuted}
+              value={title}
+              onChangeText={setTitle}
+            />
+          </View>
 
-          <Text style={styles.label}>Amount (₹) *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="0.00"
-            placeholderTextColor={colors.textMuted}
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="decimal-pad"
-          />
+          {/* Calculator-style Amount Input */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Amount</Text>
+            <CalculatorInput
+              value={amount}
+              onValueChange={handleAmountChange}
+            />
+          </View>
 
-          <Text style={styles.label}>Date</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor={colors.textMuted}
-            value={date}
-            onChangeText={setDate}
-          />
+          {/* Date Picker */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Date</Text>
+            <Pressable
+              style={({ pressed }) => [styles.dateBtn, pressed && { backgroundColor: colors.surfaceLight }]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+              <Text style={styles.dateBtnText}>
+                {formatDisplayDate(date)}
+              </Text>
+              <Text style={styles.dateBtnRaw}>{date}</Text>
+              <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+            </Pressable>
+          </View>
 
-          <Text style={styles.label}>Note (optional)</Text>
-          <TextInput
-            style={[styles.input, styles.noteInput]}
-            placeholder="Add a note..."
-            placeholderTextColor={colors.textMuted}
-            value={note}
-            onChangeText={setNote}
-            multiline
-            numberOfLines={3}
-          />
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Note (optional)</Text>
+            <TextInput
+              style={[styles.input, styles.noteInput]}
+              placeholder="Add a note..."
+              placeholderTextColor={colors.textMuted}
+              value={note}
+              onChangeText={setNote}
+              multiline
+              numberOfLines={3}
+            />
+          </View>
         </View>
 
         {/* Buttons */}
         <View style={styles.btnRow}>
-          <Pressable style={styles.cancelBtn} onPress={() => navigation.goBack()}>
+          <Pressable
+            style={({ pressed }) => [styles.cancelBtn, pressed && { opacity: 0.8 }]}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.cancelText}>Cancel</Text>
           </Pressable>
-          <Pressable style={styles.saveBtn} onPress={handleSave}>
+          <Pressable
+            style={({ pressed }) => [styles.saveBtn, pressed && { opacity: 0.85 }]}
+            onPress={handleSave}
+          >
+            <Ionicons name="checkmark" size={18} color={colors.white} />
             <Text style={styles.saveText}>Save</Text>
           </Pressable>
         </View>
       </ScrollView>
+
+      {/* Date Picker Modal */}
+      <DatePickerModal
+        visible={showDatePicker}
+        selectedDate={date}
+        onSelectDate={setDate}
+        onClose={() => setShowDatePicker(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -150,20 +240,23 @@ export default function AddTransactionScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    paddingTop: 28,
+    paddingTop: 8,
   },
-  heading: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 24,
+  categoryTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primarySoft,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 20,
   },
   categoryLabel: {
     color: colors.primary,
     fontSize: 12,
     fontWeight: '600',
-    marginTop: -18,
-    marginBottom: 8,
   },
   typeToggle: {
     flexDirection: 'row',
@@ -172,12 +265,15 @@ const styles = StyleSheet.create({
   },
   typeBtn: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     paddingVertical: 14,
     borderRadius: 14,
-    alignItems: 'center',
-    backgroundColor: colors.surfaceLight,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.border,
   },
   typeBtnText: {
     color: colors.textSecondary,
@@ -188,25 +284,49 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   form: {
-    gap: 4,
+    gap: 16,
+  },
+  fieldGroup: {
+    gap: 6,
   },
   label: {
     color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    marginTop: 14,
+    fontSize: 13,
+    fontWeight: '600',
   },
   input: {
-    backgroundColor: colors.surfaceLight,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
     color: colors.text,
     fontSize: 16,
     fontWeight: '600',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  // Date button (replaces text input)
+  dateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  dateBtnText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  dateBtnRaw: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '500',
   },
   noteInput: {
     height: 80,
@@ -220,9 +340,11 @@ const styles = StyleSheet.create({
   cancelBtn: {
     flex: 1,
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 14,
     alignItems: 'center',
-    backgroundColor: colors.surfaceLight,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   cancelText: {
     color: colors.textSecondary,
@@ -231,9 +353,12 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     flex: 1,
-    paddingVertical: 16,
-    borderRadius: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 16,
+    borderRadius: 14,
     backgroundColor: colors.primary,
   },
   saveText: {
