@@ -104,7 +104,8 @@ export default function SettingsScreen({ navigation }) {
 
         {/* App Info */}
         <View style={styles.appInfo}>
-          <Text style={styles.appName}>BudgetApp</Text>
+          <Text style={styles.appName}>Kash</Text>
+          <Text style={styles.appTagline}>Manage. Save. Prosper.</Text>
           <Text style={styles.appVersion}>Version 1.0.0</Text>
         </View>
 
@@ -227,12 +228,19 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   appName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textMuted,
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.primary,
+    letterSpacing: 0.5,
+  },
+  appTagline: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontWeight: '500',
   },
   appVersion: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textMuted,
+    marginTop: 2,
   },
 });

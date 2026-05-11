@@ -75,7 +75,7 @@ export default function DataScreen() {
 
       await Sharing.shareAsync(fileUri, {
         mimeType: MIME_TYPE,
-        dialogTitle: 'Save or share your BudgetApp backup',
+        dialogTitle: 'Save or share your Kash backup',
         UTI: 'public.json',
       });
     } catch (e) {
@@ -280,7 +280,7 @@ export default function DataScreen() {
             {[
               'On your old phone — tap "Export & Share"',
               'Send the file via WhatsApp, Email, or Drive',
-              'On your new phone — install BudgetApp',
+              'On your new phone — install Kash',
               'Open the file or tap "Select Backup File"',
               'All your data will be restored',
             ].map((step, i) => (

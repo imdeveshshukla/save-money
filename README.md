@@ -1,4 +1,4 @@
-# 💰 BudgetApp
+# 💚 Kash — Manage. Save. Prosper.
 
 A clean, minimal personal budget manager for Android built with **React Native** & **Expo**. Track income, expenses, and budgets across multiple categories — with AI-powered receipt scanning via **Groq**.
 
@@ -21,7 +21,7 @@ A clean, minimal personal budget manager for Android built with **React Native**
 | Feature | Description |
 |---|---|
 | 📷 **AI Receipt Scanner** | Capture or select a payment screenshot — Groq AI auto-extracts amount, payee, merchant, and date |
-| 📤 **Share from GPay/PhonePe** | Share a payment screenshot directly from any UPI app — BudgetApp appears in Android's share sheet and processes it automatically |
+| 📤 **Share from GPay/PhonePe** | Share a payment screenshot directly from any UPI app — Kash appears in Android's share sheet and processes it automatically |
 
 ### UX Enhancements
 
@@ -51,7 +51,7 @@ A clean, minimal personal budget manager for Android built with **React Native**
 - Section headers with date label + daily income/expense totals
 - Filter by type: All / Income / Expense
 - Filter by date: tap date chips at the top
-- Swipe to delete individual entries
+- Delete individual entries
 
 ### Scan (Upload)
 
@@ -75,7 +75,8 @@ A clean, minimal personal budget manager for Android built with **React Native**
 - Quick links to:
   - **Set Budget** — define monthly spending limit
   - **Categories** — create, rename, delete, switch between categories
-  - **Backup & Restore** — export/import `.budgetapp` files
+  - **Backup & Restore** — export/import backup files
+- App branding: **Kash** · *Manage. Save. Prosper.*
 
 ---
 
@@ -107,14 +108,13 @@ A clean, minimal personal budget manager for Android built with **React Native**
 | Android device or emulator | ✅ | Physical device recommended |
 | Groq API key | ✅ (for AI features) | [console.groq.com/keys](https://console.groq.com/keys) |
 
-> [!IMPORTANT]
-> **Expo Go is NOT supported.** The share intent feature modifies native Android code and requires a Development Build (`npx expo run:android`).
+> ⚠️ **Expo Go is NOT supported.** The share intent feature modifies native Android code and requires a Development Build (`npx expo run:android`).
 
 ### Step 1 — Clone the project
 
 ```bash
-git clone https://github.com/your-username/BudgetApp.git
-cd BudgetApp
+git clone https://github.com/your-username/Kash.git
+cd Kash
 ```
 
 ### Step 2 — Install dependencies
@@ -168,12 +168,18 @@ npx eas build -p android --profile preview
 ## 📂 Project Structure
 
 ```
-BudgetApp/
+Kash/
 ├── App.js                             # Root — navigation + share intent handler
 ├── .env                               # EXPO_PUBLIC_GROQ_API_KEY (git-ignored)
 ├── app.json                           # Expo config + share-intent plugin
 ├── eas.json                           # EAS Build profiles
 ├── package.json
+│
+├── assets/
+│   ├── icon.png                       # Kash logo — green K on white
+│   ├── adaptive-icon.png              # Android adaptive icon foreground
+│   ├── splash-icon.png                # Splash screen — K + "Kash" + tagline
+│   └── favicon.png                    # Web favicon
 │
 ├── src/
 │   ├── context/
@@ -198,9 +204,8 @@ BudgetApp/
 │   │   └── DatePickerModal.js         # Custom calendar date picker modal
 │   │
 │   └── theme/
-│       └── colors.js                  # Design tokens — light theme color palette
+│       └── colors.js                  # Design tokens — Kash green palette
 │
-├── assets/                            # App icons and splash screen
 └── android/                           # Native Android project (auto-generated)
 ```
 
@@ -210,11 +215,10 @@ BudgetApp/
 
 1. Open **GPay**, **PhonePe**, or any UPI app and complete a payment
 2. Tap **Share** on the payment receipt / screenshot
-3. Select **BudgetApp** from the Android share sheet
+3. Select **Kash** from the Android share sheet
 4. The app opens on the **Scan** screen with the screenshot pre-loaded
 5. Groq AI auto-extracts amount, payee, date — saved as an expense
 
-> [!NOTE]
 > The share feature only works after building with `npx expo run:android`. It modifies native Android intent filters and won't work in Expo Go.
 
 ---
@@ -237,7 +241,7 @@ BudgetApp/
 ### Transfer to a new phone
 
 1. On old phone → **Export & Share** → send file to yourself
-2. On new phone → install BudgetApp → **More → Backup & Restore → Select Backup File**
+2. On new phone → install Kash → **More → Backup & Restore → Select Backup File**
 3. All categories, budgets, and transactions are restored
 
 ---
@@ -266,25 +270,25 @@ The amount field supports basic arithmetic:
 | **Build fails with dependency errors** | Run `npm install --legacy-peer-deps` then `npx expo run:android` |
 | **Missing API key alert** | Create `.env` with `EXPO_PUBLIC_GROQ_API_KEY=your_key` and restart the dev server |
 | **Groq API returns error** | Verify key at [console.groq.com](https://console.groq.com/keys). Ensure image is under ~4MB |
-| **BudgetApp not in share sheet** | Only works after `npx expo run:android`. Uninstall and reinstall if needed |
+| **Kash not in share sheet** | Only works after `npx expo run:android`. Uninstall and reinstall if needed |
 | **Camera not working on emulator** | Camera requires a real device. Use Gallery on AVD |
 | **Dev client can't connect** | Ensure phone and PC are on the same Wi-Fi. Try `npx expo start --dev-client --tunnel` |
-| **Date picker not opening** | Ensure you're running the latest code. The date picker is a custom modal — no native dependencies required |
 
 ---
 
 ## 🎨 Design
 
-The app uses a **clean light theme** with a teal accent palette:
+The app uses a **clean light theme** with the signature **Kash green** palette:
 
 - **Background**: Warm off-white (`#F5F5F7`)
 - **Cards**: Pure white with subtle borders
-- **Accent**: Rich teal (`#1B9C85`)
-- **Income**: Teal (matches primary)
+- **Primary / Kash Green**: `#22A45D`
+- **Primary Light**: `#34C759`
+- **Income**: Green (matches primary)
 - **Expense**: Warm red (`#E74C3C`)
 - **Typography**: System font with 800/700/600 weight hierarchy
 
-Navigation uses **4 bottom tabs** (Home, Transactions, Scan, More) instead of cramming all features into the tab bar. Budget, Categories, and Data are accessible from the **More** hub.
+Navigation uses **4 bottom tabs** (Home, Transactions, Scan, More). Budget, Categories, and Data are accessible from the **More** hub.
 
 ---
 

@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "BudgetApp",
-    "slug": "BudgetApp",
+    "name": "Kash",
+    "slug": "kash",
     "version": "1.0.0",
-    "scheme": "budgetapp",
+    "scheme": "kash",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.BudgetApp"
+      "package": "com.anonymous.Kash"
     },
     "web": {
       "favicon": "./assets/favicon.png"
