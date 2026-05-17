@@ -32,13 +32,10 @@
       [
         "expo-share-intent",
         {
-          "android": {
-            "intentFilters": [
-              "image/*"
-            ]
-          }
+          "androidIntentFilters": ["image/*"],
+          "androidMultiIntentFilters": ["image/*"]
         }
       ]
     ]
   }
-}
+}g
