@@ -82,11 +82,12 @@ export default function App() {
   // Step 1 – capture URI the moment expo-share-intent makes it available
   useEffect(() => {
     const sharedImageUri =
-      shareIntent?.value ||
       shareIntent?.files?.[0]?.path ||
-      shareIntent?.files?.[0]?.uri;
+      shareIntent?.files?.[0]?.uri ||
+      shareIntent?.value;
 
     if (hasShareIntent && sharedImageUri) {
+      // Append timestamp to make each share event unique
       setPendingShareUri(sharedImageUri);
       resetShareIntent(); // clear immediately so it doesn't fire again on re-render
     }
@@ -95,11 +96,15 @@ export default function App() {
   // Step 2 – navigate once BOTH the URI and the navigator are ready
   useEffect(() => {
     if (isNavigationReady && pendingShareUri && navigationRef.current) {
-      navigationRef.current.navigate('Main', {
-        screen: 'Scan',
-        params: { sharedImageUri: pendingShareUri },
-      });
-      setPendingShareUri(null);
+      // Small delay to ensure tab screens are fully mounted (especially on cold start)
+      const timer = setTimeout(() => {
+        navigationRef.current.navigate('Main', {
+          screen: 'Scan',
+          params: { sharedImageUri: pendingShareUri },
+        });
+        setPendingShareUri(null);
+      }, 300);
+      return () => clearTimeout(timer);
     }
   }, [isNavigationReady, pendingShareUri]);
 

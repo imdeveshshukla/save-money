@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -26,112 +26,26 @@ function todayString() {
 }
 
 export default function UploadScreen({ navigation, route }) {
-  const { addTransaction, activeCategory } = useBudget();
+  const { addTransaction, activeCategory, loading: contextLoading } = useBudget();
   const [imageUri, setImageUri] = useState(null);
   const [imageName, setImageName] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSharedImage, setIsSharedImage] = useState(false);
 
-  // Handle image shared from another app (e.g. GPay share sheet)
-  useEffect(() => {
-    const sharedUri = route?.params?.sharedImageUri;
-    if (!sharedUri) return;
+  // Track what we've already processed to avoid double-processing
+  const processedUriRef = useRef(null);
 
-    async function loadSharedImage() {
-      try {
-        setLoading(true);
-        let safeUri = sharedUri;
-        // If Android returns a raw absolute path, FileSystem needs the file:// prefix
-        if (safeUri.startsWith('/')) {
-          safeUri = 'file://' + safeUri;
-        }
-
-        const base64 = await FileSystem.readAsStringAsync(safeUri, {
-          encoding: 'base64',
-        });
-        setImageUri(safeUri);
-        setImageName('shared_screenshot.jpg');
-        setImageBase64(base64);
-        setIsSharedImage(true);
-        
-        // Automatically extract & add expense since user shared it to this app!
-        await handleAddAsExpense(safeUri, base64);
-      } catch (e) {
-        Alert.alert('Error', `Could not load the shared image.\nReason: ${e.message}`);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadSharedImage();
-  }, [route?.params?.sharedImageUri]);
-
-  function clearImage() {
-    setImageUri(null);
-    setImageName(null);
-    setImageBase64(null);
-    setIsSharedImage(false);
-  }
-
-  async function pickImage(fromCamera) {
-    let result;
-
-    if (fromCamera) { 
-      const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) {
-        Alert.alert('Permission required', 'Camera access is needed to take a photo.');
-        return;
-      }
-      result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ['images'],
-        quality: 0.8,
-        base64: true,
-      });
-    } else {
-      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) {
-        Alert.alert('Permission required', 'Gallery access is needed to upload screenshots.');
-        return;
-      }
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        quality: 0.8,
-        base64: true,
-      });
-    }
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const asset = result.assets[0];
-      setImageUri(asset.uri);
-      setImageName(asset.fileName || 'payment_screenshot.jpg');
-      setImageBase64(asset.base64);
-    }
-  }
-
-  async function handleAddAsExpense(customUri, customBase64) {
-    // Buttons pass a GestureResponderEvent on click. Clean it if so:
-    const isSyntheticEvent = customUri && typeof customUri === 'object' && customUri.nativeEvent;
-    
-    const targetUri = (!isSyntheticEvent && customUri) ? customUri : imageUri;
-    const targetBase64 = customBase64 ? customBase64 : imageBase64;
-
-    if (!targetUri || !targetBase64) {
-      Alert.alert('No image', 'Please select a screenshot first.');
-      return;
-    }
-
+  // ── Core extraction function (stable ref, no stale closures) ──────────────
+  const extractAndSave = useCallback(async (targetUri, targetBase64) => {
     const apiKey = process.env.EXPO_PUBLIC_GROQ_API_KEY;
-    console.log('Groq API Key present:', !!apiKey);
     if (!apiKey || apiKey === 'your_groq_api_key_here') {
       Alert.alert(
         'Missing API Key',
         'Please add your Groq API key to .env as EXPO_PUBLIC_GROQ_API_KEY.\n\nGet a free key at https://console.groq.com/keys'
       );
-      return;
+      return false;
     }
-
-    setLoading(true);
 
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -187,7 +101,7 @@ export default function UploadScreen({ navigation, route }) {
         title = merchant;
       }
 
-      addTransaction({
+      const transaction = {
         id: generateId(),
         type: 'expense',
         title,
@@ -195,23 +109,156 @@ export default function UploadScreen({ navigation, route }) {
         date: parsed.date || todayString(),
         note: parsed.note || 'Extracted via Groq AI',
         imageUri: targetUri,
-      });
+      };
 
-      Alert.alert(
-        'Success!',
-        'Transaction processed with Groq AI successfully.',
-        [
-          { text: 'Go to Transactions', onPress: () => navigation.navigate('Transactions') },
-          { text: 'OK' },
-        ]
-      );
-
-      setImageUri(null);
-      setImageName(null);
-      setImageBase64(null);
-
+      addTransaction(transaction);
+      return true; // success
     } catch (error) {
       Alert.alert('Extraction Failed', `Could not extract data: ${error.message}`);
+      return false;
+    }
+  }, [addTransaction]);
+
+  // ── Handle shared image from another app (e.g. GPay share sheet) ──────────
+  // Wait for BOTH the shared URI to arrive AND context to finish loading
+  useEffect(() => {
+    const sharedUri = route?.params?.sharedImageUri;
+    if (!sharedUri) return;
+    if (contextLoading) return; // context not ready yet, wait
+    if (processedUriRef.current === sharedUri) return; // already processed this URI
+
+    // Mark as processed immediately to prevent double-firing
+    processedUriRef.current = sharedUri;
+
+    async function loadAndProcess() {
+      try {
+        setLoading(true);
+        let safeUri = sharedUri;
+        // If Android returns a raw absolute path, FileSystem needs the file:// prefix
+        if (safeUri.startsWith('/')) {
+          safeUri = 'file://' + safeUri;
+        }
+
+        const base64 = await FileSystem.readAsStringAsync(safeUri, {
+          encoding: 'base64',
+        });
+        setImageUri(safeUri);
+        setImageName('shared_screenshot.jpg');
+        setImageBase64(base64);
+        setIsSharedImage(true);
+
+        // Auto-extract & save
+        const success = await extractAndSave(safeUri, base64);
+
+        if (success) {
+          Alert.alert(
+            'Transaction Added!',
+            'Payment details extracted and saved as expense.',
+            [
+              {
+                text: 'View Transactions',
+                onPress: () => {
+                  // Navigate to Transactions tab (sibling tab within the same navigator)
+                  navigation.navigate('Transactions');
+                },
+              },
+              { text: 'OK' },
+            ]
+          );
+          // Clear state after successful save
+          setImageUri(null);
+          setImageName(null);
+          setImageBase64(null);
+          setIsSharedImage(false);
+        }
+      } catch (e) {
+        Alert.alert('Error', `Could not load the shared image.\nReason: ${e.message}`);
+      } finally {
+        setLoading(false);
+        // Clear the route params so re-focusing the tab doesn't re-trigger
+        navigation.setParams({ sharedImageUri: undefined });
+      }
+    }
+
+    loadAndProcess();
+  }, [route?.params?.sharedImageUri, contextLoading, extractAndSave, navigation]);
+
+  // Reset processedUri when navigating away and back (allows re-share)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('blur', () => {
+      processedUriRef.current = null;
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  function clearImage() {
+    setImageUri(null);
+    setImageName(null);
+    setImageBase64(null);
+    setIsSharedImage(false);
+  }
+
+  async function pickImage(fromCamera) {
+    let result;
+
+    if (fromCamera) { 
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('Permission required', 'Camera access is needed to take a photo.');
+        return;
+      }
+      result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+        base64: true,
+      });
+    } else {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('Permission required', 'Gallery access is needed to upload screenshots.');
+        return;
+      }
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+        base64: true,
+      });
+    }
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setImageUri(asset.uri);
+      setImageName(asset.fileName || 'payment_screenshot.jpg');
+      setImageBase64(asset.base64);
+    }
+  }
+
+  async function handleAddAsExpense() {
+    if (!imageUri || !imageBase64) {
+      Alert.alert('No image', 'Please select a screenshot first.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const success = await extractAndSave(imageUri, imageBase64);
+      if (success) {
+        Alert.alert(
+          'Transaction Added!',
+          'Payment details extracted and saved as expense.',
+          [
+            {
+              text: 'View Transactions',
+              onPress: () => navigation.navigate('Transactions'),
+            },
+            { text: 'OK' },
+          ]
+        );
+        // Clear after successful save
+        setImageUri(null);
+        setImageName(null);
+        setImageBase64(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -255,6 +302,15 @@ export default function UploadScreen({ navigation, route }) {
             <Text style={styles.pickText}>Gallery</Text>
           </Pressable>
         </View>
+
+        {/* Loading overlay for shared images */}
+        {loading && !imageUri && (
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Processing shared image...</Text>
+            <Text style={styles.loadingSub}>Extracting payment details with AI</Text>
+          </View>
+        )}
 
         {/* Preview */}
         {imageUri ? (
@@ -303,7 +359,7 @@ export default function UploadScreen({ navigation, route }) {
               <Text style={[styles.clearBtnText, loading && { opacity: 0.5 }]}>Remove Image</Text>
             </Pressable>
           </View>
-        ) : (
+        ) : !loading && (
           <View style={styles.placeholder}>
             <View style={styles.placeholderIconBox}>
               <Ionicons name="cloud-upload-outline" size={40} color={colors.textMuted} />
@@ -401,6 +457,26 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
+  },
+  // Loading card
+  loadingCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    paddingVertical: 48,
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  loadingText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  loadingSub: {
+    color: colors.textMuted,
+    fontSize: 13,
   },
   // Preview
   previewCard: {
